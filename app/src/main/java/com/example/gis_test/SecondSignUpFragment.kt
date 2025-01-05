@@ -102,7 +102,6 @@ class SecondSignUpFragment : Fragment() {
 
             viewModel.user.value = updatedUser
 
-            // ניווט לפרגמנט הבא
             findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
         }
 
