@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Toast
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -119,7 +120,11 @@ class SecondSignUpFragment : Fragment() {
 //                return@setOnClickListener
 //            }
 
-            // עדכון הנתונים ב-ViewModel
+            if (businessStreet.isNotEmpty() && businessStreetNumber.isNotEmpty()) {
+                // יצירת כתובת לחיפוש
+                val address = "$businessStreet $businessStreetNumber"
+
+                // עדכון הנתונים ב-ViewModel
             val updatedUser = user?.copy(
                 businessName = businessName,
                 businessCategory = businessCategory,
@@ -133,8 +138,11 @@ class SecondSignUpFragment : Fragment() {
             )
 
             viewModel.user.value = updatedUser
-
             findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
+
+            } else {
+                Toast.makeText(requireContext(), "Please fill in both street name and number.", Toast.LENGTH_SHORT).show()
+            }
         }
 
         return binding.root

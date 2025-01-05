@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Leaflet Map</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Map with GeoCoder</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <style>
-
         body, html {
             margin: 0;
             padding: 0;
@@ -13,56 +16,107 @@
             overflow: hidden;
         }
 
-        /* Wrapper for the map and top space */
         #map-wrapper {
-            height: 100%; /* Use full height */
+            height: 100%;
             width: 100%;
             display: flex;
             flex-direction: column;
         }
 
-        /* Top bar with fixed height */
         #top-bar {
             height: 50px;
             width: 100%;
-            background-color: #f4f4f4; /* Light gray */
+            background-color: #f4f4f4;
             line-height: 50px;
             text-align: center;
             border-bottom: 1px solid #ccc;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
         }
 
-        /* Map takes the remaining space */
         #map {
-            flex: 1; /* Fill the remaining height */
+            flex: 1;
             width: 100%;
         }
     </style>
 </head>
 <body>
 <div id="map-wrapper">
-    <!-- Top bar for spacing -->
-    <div id="top-bar"></div>
+    <!-- Top bar -->
+    <div id="top-bar">Map with GeoCoder</div>
 
-    <!-- Leaflet map -->
+    <!-- Map container -->
     <div id="map"></div>
 </div>
 
 <script>
     // Initialize the map
-    var map = L.map('map').setView([32.0853, 34.7818], 15); // Center at Tel Aviv
+    const map = L.map('map').setView([32.0853, 34.7818], 15); // Center at Tel Aviv
 
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
+    // Add GeoCoder control
+    const geocoder = L.Control.geocoder({
+        defaultMarkGeocode: false // Prevent automatic marker placement
+    })
+    .on('markgeocode', function(e) {
+        const { center } = e.geocode; // Get geocoded center coordinates
+        L.marker(center).addTo(map) // Add marker at the location
+            .bindPopup(`Coordinates: ${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`)
+            .openPopup();
+        map.setView(center, 15); // Center map on the selected location
+        console.log(`Geocoded Location: Lat = ${center.lat}, Lng = ${center.lng}`);
+
+        // Notify Android app with the selected coordinates
+        if (window.Android && window.Android.sendCoordinates) {
+            window.Android.sendCoordinates(center.lat, center.lng);
+        }
+    })
+    .addTo(map);
+
     // Add a sample marker in Tel Aviv
-    L.marker([32.0853, 34.7818]).addTo(map)
-        .bindPopup('Welcome to Tel Aviv!')
+    const marker = L.marker([32.0853, 34.7818]).addTo(map)
+        .bindPopup('<b>Welcome to Tel Aviv!</b>')
         .openPopup();
 
-    // Ensure map size is properly calculated
+    // Allow map size adjustment
     map.invalidateSize();
+
+    // Enable click-to-add-marker functionality
+    map.on('click', function(e) {
+        const { lat, lng } = e.latlng;
+        L.marker([lat, lng]).addTo(map)
+            .bindPopup(`Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`)
+            .openPopup();
+    });
+
+    function searchAddress(address) {
+    const geocoder = L.Control.Geocoder.nominatim();
+    geocoder.geocode(address, function(results) {
+        if (results && results.length > 0) {
+            const result = results[0];
+            const { lat, lng } = result.center;
+
+            // הוסף מרקר והזז את המפה למיקום
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup(`Found: ${address}`)
+                .openPopup();
+            map.setView([lat, lng], 15);
+
+            // שלח נתוני נ"צ לאנדרואיד אם צריך
+            if (window.Android && window.Android.sendCoordinates) {
+                window.Android.sendCoordinates(lat, lng);
+            }
+        } else {
+            alert("Address not found!");
+        }
+    });
+}
+
 </script>
 </body>
 </html>
