@@ -5,18 +5,47 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
     <style>
-        #map {
-            height: 100%;
-            width: 100%;
-        }
         body, html {
             margin: 0;
+            padding: 0;
             height: 100%;
+            overflow: hidden;
+        }
+
+        /* Wrapper for the map and top space */
+        #map-wrapper {
+            height: 100%; /* Use full height */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top bar with fixed height */
+        #top-bar {
+            height: 50px;
+            width: 100%;
+            background-color: #f4f4f4; /* Light gray */
+            line-height: 50px;
+            text-align: center;
+            border-bottom: 1px solid #ccc;
+        }
+
+        /* Map takes the remaining space */
+        #map {
+            flex: 1; /* Fill the remaining height */
+            width: 100%;
         }
     </style>
 </head>
 <body>
-<div id="map"></div>
+<div id="map-wrapper">
+    <!-- Top bar for spacing -->
+    <div id="top-bar"></div>
+
+    <!-- Leaflet map -->
+    <div id="map"></div>
+</div>
+
 <script>
     // Initialize the map
     var map = L.map('map').setView([32.0853, 34.7818], 15); // Center at Tel Aviv
@@ -30,6 +59,9 @@
     L.marker([32.0853, 34.7818]).addTo(map)
         .bindPopup('Welcome to Tel Aviv!')
         .openPopup();
+
+    // Ensure map size is properly calculated
+    map.invalidateSize();
 </script>
 </body>
 </html>
