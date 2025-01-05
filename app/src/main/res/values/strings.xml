@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">GIS_TEST</string>
+    <string name="app_title">Got Your Back</string>
+    <string name="sign_in_btn">Login / Signup</string>
+    <string name="map_btn">Map</string>
+    <string name="enter_user_name">Enter user name</string>
+    <string name="user_name">User name:</string>
+    <string name="password">Password:</string>
+    <string name="enter_password">Enter password</string>
+    <string name="login">Login</string>
+    <string name="sign_up">Sign up</string>
+    <string name="email">Email:</string>
+    <string name="enter_email">Enter Email</string>
+    <string name="if_you_haven_t_signed_up_yet">If you haven\'t signed up yet</string>
+    <string name="Continue_btn">Continue</string>
+    <string name="business_name">Business name:</string>
+    <string name="enter_business_name">Enter business name</string>
+    <string name="category">Category:</string>
+    <string name="city">City:</string>
+    <string name="street">street:</string>
+    <string name="street_number">Street number:</string>
+    <string name="enter_street_number">Enter street number</string>
+    <string name="describe_your_business">Describe your business</string>
+    <string name="description">Description:</string>
+    <string name="opening_hours">Opening hours:</string>
+    <string name="to">to</string>
+    <string name="enter_street_name">Enter street name</string>
+    <string name="closing_hours">Closing hours:</string>
+</resources>
