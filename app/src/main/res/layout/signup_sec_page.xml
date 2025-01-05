@@ -91,7 +91,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
-                <com.google.android.material.textfield.TextInputEditText
+                <AutoCompleteTextView
                     android:id="@+id/streetName_edt"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -99,7 +99,8 @@
                     android:importantForAutofill="no"
                     android:inputType="text"
                     android:minHeight="48dp"
-                    android:textColorHint="@color/hints" />
+                    android:textColorHint="@color/hints"
+                    android:completionThreshold="1"/>
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 

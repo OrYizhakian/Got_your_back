@@ -1,15 +1,39 @@
 package com.example.gis_test
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.gis_test.databinding.SignupSecPageBinding
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
+fun loadStreetsFromCsv(context: Context): List<String> {
+    val streetsList = mutableListOf<String>()
+
+    try {
+        val inputStream = context.assets.open("TelAvivStreets.csv")
+        val reader = BufferedReader(InputStreamReader(inputStream))
+        var line: String?
+
+        while (reader.readLine().also { line = it } != null) {
+            streetsList.add(line!!) // מוסיף את שם הרחוב
+        }
+
+        reader.close()
+        inputStream.close()
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+
+    return streetsList
+}
 
 
 class SecondSignUpFragment : Fragment() {
@@ -22,7 +46,15 @@ class SecondSignUpFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
         _binding = SignupSecPageBinding.inflate(inflater, container, false)
+        val streets = loadStreetsFromCsv(requireContext())
+
+        // יצירת Adapter עבור AutoCompleteTextView
+        val streetAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, streets)
+
+        // הגדרת Adapter לשדה הרחוב
+        binding.streetNameEdt.setAdapter(streetAdapter)
         val categories = arrayOf(
             "מסעדה",
             "בית קפה",
