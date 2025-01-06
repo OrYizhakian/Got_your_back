@@ -10,7 +10,7 @@ import android.widget.Toast
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModel
+
 import androidx.navigation.fragment.findNavController
 import com.example.gis_test.databinding.SignupSecPageBinding
 import java.io.BufferedReader
