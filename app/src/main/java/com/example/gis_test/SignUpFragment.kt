@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.gis_test.databinding.SignupPageBinding
@@ -23,15 +25,15 @@ class SignUpFragment: Fragment() {
         _binding = SignupPageBinding.inflate(inflater,container,false)
         userViewModel= ViewModelProvider(this)[UserViewModel::class.java]
         binding.continueBtn.setOnClickListener {
-
+            val userViewModel: UserViewModel by activityViewModels()
             val userName = binding.usernameEdt.text.toString()
             val userEmail = binding.emailEdt.text.toString()
             val userPassword = binding.passwordEdt.text.toString()
 
-                /*if(userName.isBlank()||userEmail.isBlank()||userPassword.isBlank()){
+            if(userName.isBlank()||userEmail.isBlank()||userPassword.isBlank()){
+                Toast.makeText(requireContext(), "User data is missing", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
-            }*/
-
+            }
             val user= UserDataFragment.User(
                 userName = userName,
                 userEmail = userEmail,
@@ -45,11 +47,15 @@ class SignUpFragment: Fragment() {
                 businessOpeningMinutes = "",
                 businessClosingMinutes = "",
                 businessDescription = ""
-        )
-            userViewModel.user.value=user
+            )
+            //userViewModel.user.value = user
+            userViewModel.updateUser(user)
             findNavController().navigate(R.id.action_signUpFragment_to_secondSignUpFragment)
 
         }
+
+
+
         return binding.root
     }
 

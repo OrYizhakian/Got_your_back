@@ -45,6 +45,9 @@
         <action
             android:id="@+id/action_secondSignUpFragment_to_loginPageFragment"
             app:destination="@id/loginPageFragment" />
+        <action
+            android:id="@+id/action_secondSignUpFragment_to_mapFragment2"
+            app:destination="@id/mapFragment2" />
     </fragment>
     <fragment
         android:id="@+id/mapFragment2"

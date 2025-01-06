@@ -10,6 +10,7 @@ import android.widget.Toast
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.findNavController
 import com.example.gis_test.databinding.SignupSecPageBinding
 import java.io.BufferedReader
@@ -96,49 +97,59 @@ class SecondSignUpFragment : Fragment() {
         binding.signupBtn.setOnClickListener {
             val user = viewModel.user.value
 
-            // בדיקה אם user קיים
-//            if (user == null) {
-//                println("Error: User is null")
-//                return@setOnClickListener
-//            }
+
 
             val businessName = binding.businessNameEdt.text.toString()
-            val businessCategory = binding.categoryPicker.toString()
+            val businessCategory = categories[binding.categoryPicker.value]
             val businessStreet = binding.streetNameEdt.text.toString()
             val businessStreetNumber = binding.streetnumberEdt.text.toString()
-            val businessOpeningHours = binding.openHourPicker.toString()
-            val businessOpeningMinutes = binding.openMinutePicker.toString()
-            val businessClosingHours = binding.closeHourPicker.toString()
-            val businessClosingMinutes = binding.closeMinutePicker.toString()
+            val businessOpeningHours = hours[binding.openHourPicker.value]
+            val businessOpeningMinutes = minutes[binding.openMinutePicker.value]
+            val businessClosingHours = hours[binding.closeHourPicker.value]
+            val businessClosingMinutes = minutes[binding.closeMinutePicker.value]
             val businessDescription = binding.businessDescEdt.text.toString()
 
             // בדיקת ערכים ריקים
-//            if (businessName.isBlank() || businessCategory.isBlank() || businessStreet.isBlank()
-//                || businessStreetNumber.isBlank()
-//            ) {
-//                println("Error: One or more fields are blank")
-//                return@setOnClickListener
-//            }
+            if (businessName.isBlank() || businessCategory.isBlank() || businessStreet.isBlank()
+                || businessStreetNumber.isBlank()
+          ) {
+                Toast.makeText(requireContext(), "null", Toast.LENGTH_SHORT).show()
+                println("Error: One or more fields are blank")
+                return@setOnClickListener
+            }
+
+            //בדיקה אם user קיים
+            if (user == null) {
+                println("Error: User is null")
+                Toast.makeText(requireContext(), "User data is missing", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
 
             if (businessStreet.isNotEmpty() && businessStreetNumber.isNotEmpty()) {
                 // יצירת כתובת לחיפוש
                 val address = "$businessStreet $businessStreetNumber"
 
                 // עדכון הנתונים ב-ViewModel
-            val updatedUser = user?.copy(
-                businessName = businessName,
-                businessCategory = businessCategory,
-                businessStreet = businessStreet,
-                businessStreetNumber = businessStreetNumber,
-                businessOpeningHours = businessOpeningHours,
-                businessOpeningMinutes = businessOpeningMinutes,
-                businessClosingHours = businessClosingHours,
-                businessClosingMinutes =  businessClosingMinutes,
-                businessDescription = businessDescription
-            )
+                val updatedUser = user.copy(
+                    businessName = businessName,
+                    businessCategory = businessCategory,
+                    businessStreet = businessStreet,
+                    businessStreetNumber = businessStreetNumber,
+                    businessOpeningHours = businessOpeningHours,
+                    businessOpeningMinutes = businessOpeningMinutes,
+                    businessClosingHours = businessClosingHours,
+                    businessClosingMinutes =  businessClosingMinutes,
+                    businessDescription = businessDescription
+                )
 
-            viewModel.user.value = updatedUser
-            findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
+                viewModel.user.value = updatedUser
+                viewModel.saveUserToFirestore(
+                    updatedUser,  // אם ה-user לא null
+                    viewModel.latitude.value,
+                    viewModel.longitude.value
+                )
+                findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
 
             } else {
                 Toast.makeText(requireContext(), "Please fill in both street name and number.", Toast.LENGTH_SHORT).show()
