@@ -6,55 +6,45 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.gis_test.databinding.SignupPageBinding
 
-
-private lateinit var userViewModel: UserViewModel
-
-class SignUpFragment: Fragment() {
+class SignUpFragment : Fragment() {
     private var _binding: SignupPageBinding? = null
-    private val binding get()= _binding!!
+    private val binding get() = _binding!!
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = SignupPageBinding.inflate(inflater,container,false)
-        userViewModel= ViewModelProvider(this)[UserViewModel::class.java]
+        _binding = SignupPageBinding.inflate(inflater, container, false)
+
         binding.continueBtn.setOnClickListener {
-            val userViewModel: UserViewModel by activityViewModels()
             val userName = binding.usernameEdt.text.toString()
             val userEmail = binding.emailEdt.text.toString()
             val userPassword = binding.passwordEdt.text.toString()
 
-            if(userName.isBlank()||userEmail.isBlank()||userPassword.isBlank()){
-                Toast.makeText(requireContext(), "User data is missing", Toast.LENGTH_SHORT).show()
+            // בדיקת ערכים ריקים
+            if (userName.isBlank() || userEmail.isBlank() || userPassword.isBlank()) {
+                Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT)
+                    .show()
                 return@setOnClickListener
             }
-            val user= UserDataFragment.User(
-                userName = userName,
-                userEmail = userEmail,
-                userPassword = userPassword,
-                businessName ="",
-                businessCategory = "",
-                businessStreet = "",
-                businessStreetNumber = "",
-                businessOpeningHours = "",
-                businessClosingHours = "",
-                businessOpeningMinutes = "",
-                businessClosingMinutes = "",
-                businessDescription = ""
+
+            // יצירת Bundle עם נתוני המשתמש
+            val userBundle = Bundle().apply {
+                putString("userName", userName)
+                putString("userEmail", userEmail)
+                putString("userPassword", userPassword)
+            }
+
+            // ניווט לפרגמנט הבא עם הנתונים
+            findNavController().navigate(
+                R.id.action_signUpFragment_to_secondSignUpFragment,
+                userBundle
             )
-            //userViewModel.user.value = user
-            userViewModel.updateUser(user)
-            findNavController().navigate(R.id.action_signUpFragment_to_secondSignUpFragment)
-
         }
-
-
 
         return binding.root
     }
@@ -62,9 +52,5 @@ class SignUpFragment: Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
     }
 }

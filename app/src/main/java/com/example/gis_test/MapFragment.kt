@@ -9,13 +9,11 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import com.example.gis_test.databinding.MapviewBinding
 
 class MapFragment : Fragment() {
     private var _binding: MapviewBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: UserViewModel by activityViewModels() // SharedViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,12 +42,10 @@ class MapFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Observe address changes in SharedViewModel
-        viewModel.user.observe(viewLifecycleOwner) { user ->
-            val address = "${user.businessStreet} ${user.businessStreetNumber}"
-            if (address.isNotBlank()) {
-                searchAddressInMap(address)
-            }
+        // Example: Directly set an address here for testing or pass it from arguments
+        val address = "123 Main Street"
+        if (address.isNotBlank()) {
+            searchAddressInMap(address)
         }
     }
 
@@ -59,7 +55,7 @@ class MapFragment : Fragment() {
     }
 
     // Function to send address to the WebView for searching
-    fun searchAddressInMap(address: String) {
+    private fun searchAddressInMap(address: String) {
         val webView: WebView = binding.mapWebView
         webView.evaluateJavascript("searchAddress('$address');", null)
     }
@@ -68,9 +64,8 @@ class MapFragment : Fragment() {
     inner class WebAppInterface {
         @JavascriptInterface
         fun sendCoordinates(lat: Double, lng: Double) {
-            // Update the user data in SharedViewModel with the selected coordinates
-            viewModel.latitude.value = lat
-            viewModel.longitude.value = lng
+            // Handle coordinates directly here
+            println("Received coordinates: Latitude = $lat, Longitude = $lng")
         }
     }
 }
