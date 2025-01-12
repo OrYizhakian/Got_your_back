@@ -3,6 +3,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="hints">#546E7A</color>
+    <color name="blue">#FFA1C6EA</color>
+    <color name="darkblue">#FF123456</color>
+    <color name="lightblue">#FFD0E3F5</color>
     <style name="AppTheme.Picker" parent="Theme.AppCompat.Light.NoActionBar" >
         <item name="android:textColorPrimary">@android:color/black</item>
     </style>

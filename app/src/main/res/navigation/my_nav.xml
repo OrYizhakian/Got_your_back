@@ -48,10 +48,17 @@
         <action
             android:id="@+id/action_secondSignUpFragment_to_mapFragment2"
             app:destination="@id/mapFragment2" />
+        <action
+            android:id="@+id/action_secondSignUpFragment_to_myBusinessFragment"
+            app:destination="@id/myBusinessFragment" />
     </fragment>
     <fragment
         android:id="@+id/mapFragment2"
         android:name="com.example.gis_test.MapFragment"
         android:label="mapview"
         tools:layout="@layout/mapview" />
+    <fragment
+        android:id="@+id/myBusinessFragment"
+        android:name="com.example.gis_test.MyBusinessFragment"
+        android:label="MyBusinessFragment" />
 </navigation>

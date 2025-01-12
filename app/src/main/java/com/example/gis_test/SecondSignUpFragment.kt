@@ -149,7 +149,7 @@ class SecondSignUpFragment : Fragment() {
                     viewModel.latitude.value,
                     viewModel.longitude.value
                 )
-                findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
+                findNavController().navigate(R.id.action_secondSignUpFragment_to_myBusinessFragment)
 
             } else {
                 Toast.makeText(requireContext(), "Please fill in both street name and number.", Toast.LENGTH_SHORT).show()
