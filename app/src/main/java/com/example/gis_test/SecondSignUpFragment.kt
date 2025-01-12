@@ -47,12 +47,11 @@ class SecondSignUpFragment : Fragment() {
         _binding = SignupSecPageBinding.inflate(inflater, container, false)
         val streets = loadStreetsFromCsv(requireContext())
 
-        // יצירת Adapter עבור AutoCompleteTextView
+        // Create adapter for AutoCompleteTextView
         val streetAdapter =
             ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, streets)
-
-        // הגדרת Adapter לשדה הרחוב
         binding.streetNameEdt.setAdapter(streetAdapter)
+
         val categories = arrayOf(
             "מסעדה",
             "בית קפה",
@@ -102,36 +101,34 @@ class SecondSignUpFragment : Fragment() {
             val businessClosingMinutes = minutes[binding.closeMinutePicker.value]
             val businessDescription = binding.businessDescEdt.text.toString()
 
-            // בדיקת ערכים ריקים
-            if (businessName.isBlank() || businessCategory.isBlank() || businessStreet.isBlank()
-                || businessStreetNumber.isBlank()
-            ) {
+            // Validate inputs
+            if (businessName.isBlank() || businessStreet.isBlank() || businessStreetNumber.isBlank()) {
                 Toast.makeText(requireContext(), "יש למלא את כל השדות", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            if (businessStreet.isNotEmpty() && businessStreetNumber.isNotEmpty()) {
-                // ניתן להוסיף שמירה ב-SharedPreferences או בסיס נתונים מקומי
-                val address = "$businessStreet $businessStreetNumber"
-                println("Business Name: $businessName")
-                println("Category: $businessCategory")
-                println("Address: $address")
-                println("Description: $businessDescription")
-
-                // ניווט לדף הבא
-                findNavController().navigate(R.id.action_secondSignUpFragment_to_myBusinessFragment)
-
-            } else {
-                Toast.makeText(
-                    requireContext(),
-                    "אנא מלא את שם הרחוב ומספר הבית.",
-                    Toast.LENGTH_SHORT
-                ).show()
+            // Prepare bundle with data
+            val args = Bundle().apply {
+                putString("businessName", businessName)
+                putString("businessCategory", businessCategory)
+                putString("businessStreet", businessStreet)
+                putString("businessStreetNumber", businessStreetNumber)
+                putString("businessOpeningHours", businessOpeningHours)
+                putString("businessOpeningMinutes", businessOpeningMinutes)
+                putString("businessClosingHours", businessClosingHours)
+                putString("businessClosingMinutes", businessClosingMinutes)
+                putString("businessDescription", businessDescription)
             }
+
+            // Navigate to MyBusinessFragment with arguments
+            findNavController().navigate(
+                R.id.action_secondSignUpFragment_to_myBusinessFragment,
+                args
+            )
         }
 
         return binding.root
-    }
+        }
 
     override fun onDestroyView() {
         super.onDestroyView()
