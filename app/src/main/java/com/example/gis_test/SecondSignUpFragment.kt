@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.NumberPicker
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -14,24 +15,16 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 fun loadStreetsFromCsv(context: Context): List<String> {
-    val streetsList = mutableListOf<String>()
-
-    try {
-        val inputStream = context.assets.open("TelAvivStreets.csv")
-        val reader = BufferedReader(InputStreamReader(inputStream))
-        var line: String?
-
-        while (reader.readLine().also { line = it } != null) {
-            streetsList.add(line!!) // מוסיף את שם הרחוב
+    return try {
+        context.assets.open("TelAvivStreets.csv").use { inputStream ->
+            BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                reader.lineSequence().toList()
+            }
         }
-
-        reader.close()
-        inputStream.close()
     } catch (e: Exception) {
         e.printStackTrace()
+        emptyList()
     }
-
-    return streetsList
 }
 
 class SecondSignUpFragment : Fragment() {
@@ -43,14 +36,16 @@ class SecondSignUpFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         _binding = SignupSecPageBinding.inflate(inflater, container, false)
-        val streets = loadStreetsFromCsv(requireContext())
 
-        // Create adapter for AutoCompleteTextView
-        val streetAdapter =
+        val streets = loadStreetsFromCsv(requireContext())
+        if (streets.isEmpty()) {
+            Toast.makeText(requireContext(), "Failed to load streets data.", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.streetNameEdt.setAdapter(
             ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, streets)
-        binding.streetNameEdt.setAdapter(streetAdapter)
+        )
 
         val categories = arrayOf(
             "מסעדה",
@@ -64,45 +59,45 @@ class SecondSignUpFragment : Fragment() {
             "חנות חומרי בניין",
             "חנות תכשיטים"
         )
-        val hours = arrayOf(
-            "00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
-            "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
-            "20", "21", "22", "23"
-        )
-        val minutes = arrayOf(
-            "00", "15", "30", "45"
-        )
 
-        binding.openHourPicker.minValue = 0
-        binding.openHourPicker.maxValue = hours.size - 1
-        binding.openMinutePicker.minValue = 0
-        binding.openMinutePicker.maxValue = minutes.size - 1
-        binding.closeHourPicker.minValue = 0
-        binding.closeHourPicker.maxValue = hours.size - 1
-        binding.closeMinutePicker.minValue = 0
-        binding.closeMinutePicker.maxValue = minutes.size - 1
-        binding.openHourPicker.displayedValues = hours
-        binding.openMinutePicker.displayedValues = minutes
-        binding.closeHourPicker.displayedValues = hours
-        binding.closeMinutePicker.displayedValues = minutes
-        binding.categoryPicker.minValue = 0
-        binding.categoryPicker.maxValue = (categories.size - 1)
-        binding.categoryPicker.displayedValues = categories
+        val hours = (0..23).map { it.toString().padStart(2, '0') }.toTypedArray()
+        val minutes = arrayOf("00", "15", "30", "45")
+
+        setupPicker(binding.openHourPicker, hours)
+        setupPicker(binding.openMinutePicker, minutes)
+        setupPicker(binding.closeHourPicker, hours)
+        setupPicker(binding.closeMinutePicker, minutes)
+        setupPicker(binding.categoryPicker, categories)
+
+//        binding.openHourPicker.minValue = 0
+//        binding.openHourPicker.maxValue = hours.size - 1
+//        binding.openMinutePicker.minValue = 0
+//        binding.openMinutePicker.maxValue = minutes.size - 1
+//        binding.closeHourPicker.minValue = 0
+//        binding.closeHourPicker.maxValue = hours.size - 1
+//        binding.closeMinutePicker.minValue = 0
+//        binding.closeMinutePicker.maxValue = minutes.size - 1
+//        binding.openHourPicker.displayedValues = hours
+//        binding.openMinutePicker.displayedValues = minutes
+//        binding.closeHourPicker.displayedValues = hours
+//        binding.closeMinutePicker.displayedValues = minutes
+//        binding.categoryPicker.minValue = 0
+//        binding.categoryPicker.maxValue = (categories.size - 1)
+//        binding.categoryPicker.displayedValues = categories
 
         binding.signupBtn.setOnClickListener {
 
-            val businessName = binding.businessNameEdt.text.toString()
-            val businessCategory = categories[binding.categoryPicker.value]
-            val businessStreet = binding.streetNameEdt.text.toString()
-            val businessStreetNumber = binding.streetnumberEdt.text.toString()
-            val businessOpeningHours = hours[binding.openHourPicker.value]
-            val businessOpeningMinutes = minutes[binding.openMinutePicker.value]
-            val businessClosingHours = hours[binding.closeHourPicker.value]
-            val businessClosingMinutes = minutes[binding.closeMinutePicker.value]
-            val businessDescription = binding.businessDescEdt.text.toString()
+            val businessName = binding.businessNameEdt.text.toString().trim()
+            //val businessCategory = categories[binding.categoryPicker.value]
+            val businessStreet = binding.streetNameEdt.text.toString().trim()
+            val businessStreetNumber = binding.streetnumberEdt.text.toString().trim()
+            //val businessOpeningHours = hours[binding.openHourPicker.value]
+            //val businessOpeningMinutes = minutes[binding.openMinutePicker.value]
+            //val businessClosingHours = hours[binding.closeHourPicker.value]
+            //val businessClosingMinutes = minutes[binding.closeMinutePicker.value]
+            //val businessDescription = binding.businessDescEdt.text.toString()
 
-            // Validate inputs
-            if (businessName.isBlank() || businessStreet.isBlank() || businessStreetNumber.isBlank()) {
+            if (!isInputValid(businessName, businessStreet, businessStreetNumber)) {
                 Toast.makeText(requireContext(), "יש למלא את כל השדות", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -110,14 +105,14 @@ class SecondSignUpFragment : Fragment() {
             // Prepare bundle with data
             val args = Bundle().apply {
                 putString("businessName", businessName)
-                putString("businessCategory", businessCategory)
+                putString("businessCategory", categories[binding.categoryPicker.value])
                 putString("businessStreet", businessStreet)
                 putString("businessStreetNumber", businessStreetNumber)
-                putString("businessOpeningHours", businessOpeningHours)
-                putString("businessOpeningMinutes", businessOpeningMinutes)
-                putString("businessClosingHours", businessClosingHours)
-                putString("businessClosingMinutes", businessClosingMinutes)
-                putString("businessDescription", businessDescription)
+                putString("businessOpeningHours", hours[binding.openHourPicker.value])
+                putString("businessOpeningMinutes", minutes[binding.openMinutePicker.value])
+                putString("businessClosingHours", hours[binding.closeHourPicker.value])
+                putString("businessClosingMinutes", minutes[binding.closeMinutePicker.value])
+                putString("businessDescription", binding.businessDescEdt.text.toString().trim())
             }
 
             // Navigate to MyBusinessFragment with arguments
@@ -129,6 +124,16 @@ class SecondSignUpFragment : Fragment() {
 
         return binding.root
         }
+
+    private fun setupPicker(picker: NumberPicker, values: Array<String>) {
+        picker.minValue = 0
+        picker.maxValue = values.size - 1
+        picker.displayedValues = values
+    }
+
+    private fun isInputValid(vararg inputs: String): Boolean {
+        return inputs.all { it.isNotBlank() }
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()

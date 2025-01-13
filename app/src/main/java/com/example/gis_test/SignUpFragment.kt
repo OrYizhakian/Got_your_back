@@ -21,14 +21,17 @@ class SignUpFragment : Fragment() {
         _binding = SignupPageBinding.inflate(inflater, container, false)
 
         binding.continueBtn.setOnClickListener {
-            val userName = binding.usernameEdt.text.toString()
-            val userEmail = binding.emailEdt.text.toString()
-            val userPassword = binding.passwordEdt.text.toString()
+            val userName = binding.usernameEdt.text.toString().trim()
+            val userEmail = binding.emailEdt.text.toString().trim()
+            val userPassword = binding.passwordEdt.text.toString().trim()
 
-            // בדיקת ערכים ריקים
-            if (userName.isBlank() || userEmail.isBlank() || userPassword.isBlank()) {
-                Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT)
-                    .show()
+            if (!isInputValid(userName, userEmail, userPassword)) {
+                Toast.makeText(requireContext(), "יש למלא את כל השדות", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(userEmail).matches()) {
+                Toast.makeText(requireContext(), "כתובת האימייל שגויה", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -47,6 +50,10 @@ class SignUpFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    private fun isInputValid(vararg inputs: String): Boolean {
+        return inputs.all { it.isNotBlank() }
     }
 
     override fun onDestroyView() {
