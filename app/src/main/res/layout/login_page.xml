@@ -5,7 +5,7 @@
     android:padding="16dp"
     android:orientation="vertical"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".LoginPageFragment">
+    tools:context=".ui.LoginPageFragment">
 
     <TextView
         android:layout_width="wrap_content"

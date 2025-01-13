@@ -5,7 +5,7 @@
     android:padding="16dp"
     android:orientation="vertical"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".SecondSignUpFragment"
+    tools:context=".ui.SecondSignUpFragment"
     tools:ignore="ScrollViewCount">
 
 

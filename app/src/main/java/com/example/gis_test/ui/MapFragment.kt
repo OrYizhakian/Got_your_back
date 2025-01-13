@@ -1,4 +1,4 @@
-package com.example.gis_test
+package com.example.gis_test.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater

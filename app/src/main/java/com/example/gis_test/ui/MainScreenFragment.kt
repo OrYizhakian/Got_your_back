@@ -1,41 +1,40 @@
-package com.example.gis_test
+package com.example.gis_test.ui
 
 import android.os.Bundle
-import android.view.ContextMenu
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.example.gis_test.databinding.LoginPageBinding
+import com.example.gis_test.R
+import com.example.gis_test.databinding.MainScreenPageBinding
 
-class LoginPageFragment: Fragment() {
-    private var _binding: LoginPageBinding? = null
+class MainScreenFragment: Fragment() {
+    private var _binding: MainScreenPageBinding?= null
     private val binding get() = _binding!!
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = LoginPageBinding.inflate(inflater,container,false)
-        binding.loginBtn.setOnClickListener {
-            findNavController().navigate(R.id.action_loginPageFragment_to_mapFragment2)
+        _binding = MainScreenPageBinding.inflate(inflater,container,false)
+        binding.singingButton.setOnClickListener{
+            findNavController().navigate(R.id.action_mainScreenFragment_to_loginPageFragment)
         }
-        binding.signupBtn.setOnClickListener {
-            findNavController().navigate(R.id.action_loginPageFragment_to_signUpFragment)
+        binding.mapButton.setOnClickListener{
+            findNavController().navigate(R.id.action_mainScreenFragment_to_mapFragment2)
         }
         return binding.root
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        _binding=null
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
     }
-
-
 
 }

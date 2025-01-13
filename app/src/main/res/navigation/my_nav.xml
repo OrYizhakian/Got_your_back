@@ -6,7 +6,7 @@
     app:startDestination="@id/mainScreenFragment">
     <fragment
         android:id="@+id/mainScreenFragment"
-        android:name="com.example.gis_test.MainScreenFragment"
+        android:name="com.example.gis_test.ui.MainScreenFragment"
         android:label="main_screen_page"
         tools:layout="@layout/main_screen_page" >
         <action
@@ -18,7 +18,7 @@
     </fragment>
     <fragment
         android:id="@+id/loginPageFragment"
-        android:name="com.example.gis_test.LoginPageFragment"
+        android:name="com.example.gis_test.ui.LoginPageFragment"
         android:label="login_page"
         tools:layout="@layout/login_page" >
         <action
@@ -30,7 +30,7 @@
     </fragment>
     <fragment
         android:id="@+id/signUpFragment"
-        android:name="com.example.gis_test.SignUpFragment"
+        android:name="com.example.gis_test.ui.SignUpFragment"
         android:label="signup_page"
         tools:layout="@layout/signup_page" >
         <action
@@ -39,7 +39,7 @@
     </fragment>
     <fragment
         android:id="@+id/secondSignUpFragment"
-        android:name="com.example.gis_test.SecondSignUpFragment"
+        android:name="com.example.gis_test.ui.SecondSignUpFragment"
         android:label="signup_sec_page"
         tools:layout="@layout/signup_sec_page" >
         <action
@@ -54,11 +54,11 @@
     </fragment>
     <fragment
         android:id="@+id/mapFragment2"
-        android:name="com.example.gis_test.MapFragment"
+        android:name="com.example.gis_test.ui.MapFragment"
         android:label="mapview"
         tools:layout="@layout/mapview" />
     <fragment
         android:id="@+id/myBusinessFragment"
-        android:name="com.example.gis_test.MyBusinessFragment"
+        android:name="com.example.gis_test.ui.MyBusinessFragment"
         android:label="MyBusinessFragment" />
 </navigation>

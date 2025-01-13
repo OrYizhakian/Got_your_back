@@ -1,4 +1,4 @@
-package com.example.gis_test
+package com.example.gis_test.ui
 
 import android.content.Context
 import android.os.Bundle
@@ -10,6 +10,7 @@ import android.widget.NumberPicker
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.example.gis_test.R
 import com.example.gis_test.databinding.SignupSecPageBinding
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -35,7 +36,7 @@ class SecondSignUpFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = SignupSecPageBinding.inflate(inflater, container, false)
 
         val streets = loadStreetsFromCsv(requireContext())

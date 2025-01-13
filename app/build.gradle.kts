@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
-    id("com.google.gms.google-services") // עבור Firebase
+    id("com.google.gms.google-services") // for Firebase
 }
 
 android {
@@ -43,16 +43,17 @@ android {
 }
 
 dependencies {
-    val room_version = "2.6.1"
+    val roomVersion = "2.6.1"
 
     // Room database
-    implementation("androidx.room:room-runtime:$room_version")
-    kapt("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-runtime:$roomVersion") // Runtime library
+    kapt("androidx.room:room-compiler:$roomVersion") // Annotation processor
+    implementation("androidx.room:room-ktx:$roomVersion") // Kotlin extensions
 
     // Firebase dependencies
-    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
-    implementation("com.google.firebase:firebase-database:21.0.0") // Realtime Database
-    implementation("com.google.firebase:firebase-firestore-ktx") // Firestore
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.database) // Realtime Database
+    implementation(libs.google.firebase.firestore.ktx) // Firestore
 
     // Core libraries
     implementation(libs.androidx.core.ktx)
@@ -65,11 +66,11 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-    // בדיקות
+    // Unit and Instrumented Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
-// הפעלת Google Services Plugin
+// run Google Services Plugin
 apply(plugin = "com.google.gms.google-services")

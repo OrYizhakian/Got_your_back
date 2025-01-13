@@ -1,4 +1,4 @@
-package com.example.gis_test
+package com.example.gis_test.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,8 +6,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.gis_test.R
+import com.example.gis_test.data.AppDatabase
+import com.example.gis_test.data.User
 import com.example.gis_test.databinding.SignupPageBinding
+import kotlinx.coroutines.launch
 
 class SignUpFragment : Fragment() {
     private var _binding: SignupPageBinding? = null
@@ -35,18 +40,23 @@ class SignUpFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // יצירת Bundle עם נתוני המשתמש
-            val userBundle = Bundle().apply {
-                putString("userName", userName)
-                putString("userEmail", userEmail)
-                putString("userPassword", userPassword)
-            }
+            val user = User(name = userName, email = userEmail, password = userPassword)
 
-            // ניווט לפרגמנט הבא עם הנתונים
-            findNavController().navigate(
-                R.id.action_signUpFragment_to_secondSignUpFragment,
-                userBundle
-            )
+            // Save the user in the database
+            lifecycleScope.launch {
+                try {
+                    val userId = AppDatabase.getDatabase(requireContext()).userDao().insertUser(user)
+                    val userBundle = Bundle().apply {
+                        putLong("userId", userId)
+                    }
+                    findNavController().navigate(
+                        R.id.action_signUpFragment_to_secondSignUpFragment,
+                        userBundle
+                    )
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(), "Failed to save user. Please try again.", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         return binding.root
