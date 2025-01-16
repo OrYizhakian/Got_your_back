@@ -58,5 +58,8 @@
         <action
             android:id="@+id/action_myBusinessesFragment_to_secondSignUpFragment"
             app:destination="@id/secondSignUpFragment" />
+        <action
+            android:id="@+id/action_myBusinessesFragment_to_mapFragment2"
+            app:destination="@id/mapFragment2" />
     </fragment>
 </navigation>

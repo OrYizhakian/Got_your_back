@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leaflet Map with GeoCoder</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <style>
@@ -62,6 +62,7 @@
     // Add GeoCoder control
     const geocoder = L.Control.geocoder({
         defaultMarkGeocode: false // Prevent automatic marker placement
+
     })
     .on('markgeocode', function(e) {
         const { center } = e.geocode; // Get geocoded center coordinates
@@ -78,11 +79,6 @@
     })
     .addTo(map);
 
-    // Add a sample marker in Tel Aviv
-    const marker = L.marker([32.0853, 34.7818]).addTo(map)
-        .bindPopup('<b>Welcome to Tel Aviv!</b>')
-        .openPopup();
-
     // Allow map size adjustment
     map.invalidateSize();
 
@@ -94,24 +90,33 @@
             .openPopup();
     });
 
-    function searchAddress(address) {
-    const geocoder = L.Control.Geocoder.nominatim();
+    // Search address function
+function searchAddress(address) {
+    console.log(`Received address to search: ${address}`); // Log the input address
+
+    const geocoder = L.Control.Geocoder.nominatim(); // Initialize the geocoder
     geocoder.geocode(address, function(results) {
+        console.log(`Geocoding results for "${address}":`, results); // Log the geocoding results
+
         if (results && results.length > 0) {
             const result = results[0];
             const { lat, lng } = result.center;
 
-            // הוסף מרקר והזז את המפה למיקום
+            console.log(`Geocoded location: Lat = ${lat}, Lng = ${lng}`); // Log the coordinates
+
+            // Add marker to the map
             L.marker([lat, lng]).addTo(map)
                 .bindPopup(`Found: ${address}`)
                 .openPopup();
-            map.setView([lat, lng], 15);
+            map.setView([lat, lng], 15); // Center the map on the location
 
-            // שלח נתוני נ"צ לאנדרואיד אם צריך
+            // Send coordinates back to Android
             if (window.Android && window.Android.sendCoordinates) {
+                console.log(`Sending coordinates to Android: Lat = ${lat}, Lng = ${lng}`);
                 window.Android.sendCoordinates(lat, lng);
             }
         } else {
+            console.error(`No results found for address: "${address}"`); // Log if no results
             alert("Address not found!");
         }
     });

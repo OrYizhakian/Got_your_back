@@ -24,7 +24,16 @@ class MyBusinessesFragment : Fragment() {
         _binding = MyBusinessScreenBinding.inflate(inflater, container, false)
 
         // Set up RecyclerView
-        val adapter = BusinessAdapter()
+        val adapter = BusinessAdapter{ business ->
+            // Navigate to MapFragment with the business's address
+            val bundle = Bundle().apply {
+                putString("street", "${business.street} ${business.streetNumber}")
+            }
+            findNavController().navigate(R.id.action_myBusinessesFragment_to_mapFragment2, bundle)
+        }
+
+
+
         binding.businessRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.businessRecyclerView.adapter = adapter
 

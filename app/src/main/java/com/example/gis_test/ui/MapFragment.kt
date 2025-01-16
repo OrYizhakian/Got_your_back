@@ -8,6 +8,7 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.gis_test.databinding.MapviewBinding
 
@@ -42,10 +43,11 @@ class MapFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Example: Directly set an address here for testing or pass it from arguments
-        val address = "123 Main Street"
-        if (address.isNotBlank()) {
-            searchAddressInMap(address)
+        // Get the address passed from arguments
+        val street = arguments?.getString("street")?.let { "$it, Tel Aviv, Israel" } ?: ""
+        if (street.isNotBlank()) {
+            Toast.makeText(requireContext(), "Searching for: $street", Toast.LENGTH_SHORT).show()
+            searchAddressInMap(street) // Send the address to the WebView
         }
     }
 
@@ -64,8 +66,9 @@ class MapFragment : Fragment() {
     inner class WebAppInterface {
         @JavascriptInterface
         fun sendCoordinates(lat: Double, lng: Double) {
-            // Handle coordinates directly here
+            // Handle coordinates received from the JavaScript function
             println("Received coordinates: Latitude = $lat, Longitude = $lng")
+            Toast.makeText(requireContext(), "Coordinates: $lat, $lng", Toast.LENGTH_SHORT).show()
         }
     }
 }
