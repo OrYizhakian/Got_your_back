@@ -4,7 +4,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.Navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.gis_test.R
 import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.databinding.MyBusinessScreenBinding
 import kotlinx.coroutines.launch
@@ -42,6 +45,13 @@ class MyBusinessesFragment : Fragment() {
                 }
             }
         }
+
+        binding.fabAddBusiness.setOnClickListener {
+            val bundle = Bundle()
+            bundle.putLong("userId", userId)
+            findNavController().navigate(R.id.action_myBusinessesFragment_to_secondSignUpFragment, bundle)
+        }
+
 
         // Handle back button click
         binding.mrsBackButton.setOnClickListener {

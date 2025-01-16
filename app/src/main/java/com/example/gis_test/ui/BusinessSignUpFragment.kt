@@ -138,7 +138,7 @@ class SecondSignUpFragment : Fragment() {
                     ).show()
 
                     // Navigate to the next fragment or finish the flow
-                    findNavController().navigate(R.id.action_secondSignUpFragment_to_myBusinessesFragment2)
+                    findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
                 } catch (e: Exception) {
                     Toast.makeText(
                         requireContext(),

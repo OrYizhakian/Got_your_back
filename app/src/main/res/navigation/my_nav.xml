@@ -25,9 +25,6 @@
             android:id="@+id/action_loginPageFragment_to_signUpFragment"
             app:destination="@id/signUpFragment" />
         <action
-            android:id="@+id/action_loginPageFragment_to_mapFragment2"
-            app:destination="@id/mapFragment2" />
-        <action
             android:id="@+id/action_loginPageFragment_to_myBusinessesFragment"
             app:destination="@id/myBusinessesFragment" />
     </fragment>
@@ -48,12 +45,6 @@
         <action
             android:id="@+id/action_secondSignUpFragment_to_loginPageFragment"
             app:destination="@id/loginPageFragment" />
-        <action
-            android:id="@+id/action_secondSignUpFragment_to_mapFragment2"
-            app:destination="@id/mapFragment2" />
-        <action
-            android:id="@+id/action_secondSignUpFragment_to_myBusinessesFragment2"
-            app:destination="@id/myBusinessesFragment" />
     </fragment>
     <fragment
         android:id="@+id/mapFragment2"
@@ -63,5 +54,9 @@
     <fragment
         android:id="@+id/myBusinessesFragment"
         android:name="MyBusinessesFragment"
-        android:label="MyBusinessesFragment" />
+        android:label="MyBusinessesFragment" >
+        <action
+            android:id="@+id/action_myBusinessesFragment_to_secondSignUpFragment"
+            app:destination="@id/secondSignUpFragment" />
+    </fragment>
 </navigation>
