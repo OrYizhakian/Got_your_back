@@ -27,10 +27,13 @@
         <action
             android:id="@+id/action_loginPageFragment_to_mapFragment2"
             app:destination="@id/mapFragment2" />
+        <action
+            android:id="@+id/action_loginPageFragment_to_myBusinessesFragment"
+            app:destination="@id/myBusinessesFragment" />
     </fragment>
     <fragment
         android:id="@+id/signUpFragment"
-        android:name="com.example.gis_test.ui.SignUpFragment"
+        android:name="com.example.gis_test.ui.UserSignUpFragment"
         android:label="signup_page"
         tools:layout="@layout/signup_page" >
         <action
@@ -49,8 +52,8 @@
             android:id="@+id/action_secondSignUpFragment_to_mapFragment2"
             app:destination="@id/mapFragment2" />
         <action
-            android:id="@+id/action_secondSignUpFragment_to_myBusinessFragment"
-            app:destination="@id/myBusinessFragment" />
+            android:id="@+id/action_secondSignUpFragment_to_myBusinessesFragment2"
+            app:destination="@id/myBusinessesFragment" />
     </fragment>
     <fragment
         android:id="@+id/mapFragment2"
@@ -58,7 +61,7 @@
         android:label="mapview"
         tools:layout="@layout/mapview" />
     <fragment
-        android:id="@+id/myBusinessFragment"
-        android:name="com.example.gis_test.ui.MyBusinessFragment"
-        android:label="MyBusinessFragment" />
+        android:id="@+id/myBusinessesFragment"
+        android:name="MyBusinessesFragment"
+        android:label="MyBusinessesFragment" />
 </navigation>

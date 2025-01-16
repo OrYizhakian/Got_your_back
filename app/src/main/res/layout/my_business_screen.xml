@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="20dp"
     android:background="@drawable/gradient_background">
 
+    <!-- Back Button -->
     <Button
         android:id="@+id/mrs_back_button"
         android:layout_width="80dp"
@@ -15,43 +17,26 @@
         android:text="Back"
         android:textColor="@color/white" />
 
+    <!-- Empty List Message -->
     <TextView
-        android:id="@+id/businessNameText"
-        android:layout_width="wrap_content"
+        android:id="@+id/businessListEmptyMessage"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="No businesses found."
         android:textColor="@color/darkblue"
-        android:textSize="20sp"
-        android:text="Business Name" />
+        android:textSize="18sp"
+        android:textAlignment="center"
+        android:visibility="gone"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp" />
 
-    <TextView
-        android:id="@+id/businessCategoryText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/darkblue"
-        android:textSize="20sp"
-        android:text="Category" />
+    <!-- RecyclerView for displaying businesses -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/businessRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:padding="8dp" />
 
-    <TextView
-        android:id="@+id/businessAddressText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/darkblue"
-        android:textSize="20sp"
-        android:text="Address" />
-
-    <TextView
-        android:id="@+id/businessHoursText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/darkblue"
-        android:textSize="20sp"
-        android:text="Opening Hours" />
-
-    <TextView
-        android:id="@+id/businessDescriptionText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/darkblue"
-        android:textSize="20sp"
-        android:text="Description" />
 </LinearLayout>

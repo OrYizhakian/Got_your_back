@@ -5,7 +5,7 @@
     android:padding="16dp"
     android:orientation="vertical"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ui.SignUpFragment">
+    tools:context=".ui.UserSignUpFragment">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

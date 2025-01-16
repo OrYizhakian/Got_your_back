@@ -12,4 +12,11 @@ interface UserDao {
 
     @Delete
     suspend fun deleteUser(user: User)
+
+    @Query("SELECT userId FROM users WHERE userName = :username AND password = :password")
+    suspend fun getUserIdByCredentials(username: String, password: String): Long?
+
+    @Query("SELECT * FROM users WHERE userName = :username")
+    suspend fun getUserByName(username: String): User?
 }
+
