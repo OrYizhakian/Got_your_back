@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leaflet Map with GeoCoder</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <style>
         body, html {
             margin: 0;
@@ -15,25 +13,12 @@
             height: 100%;
             overflow: hidden;
         }
-
         #map-wrapper {
             height: 100%;
             width: 100%;
             display: flex;
             flex-direction: column;
         }
-
-        #top-bar {
-            height: 50px;
-            width: 100%;
-            background-color: #f4f4f4;
-            line-height: 50px;
-            text-align: center;
-            border-bottom: 1px solid #ccc;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-        }
-
         #map {
             flex: 1;
             width: 100%;
@@ -42,86 +27,116 @@
 </head>
 <body>
 <div id="map-wrapper">
-    <!-- Top bar -->
-    <div id="top-bar"></div>
-
-    <!-- Map container -->
     <div id="map"></div>
 </div>
 
 <script>
-    // Initialize the map
-    const map = L.map('map').setView([32.0853, 34.7818], 15); // Center at Tel Aviv
+    let map;
+    let currentMarker = null;
+    let isMapInitialized = false;
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    function initMap() {
+        console.log('Initializing map...');
+        try {
+            map = L.map('map').setView([32.0853, 34.7818], 15); // Center at Tel Aviv
 
-    // Add GeoCoder control
-    const geocoder = L.Control.geocoder({
-        defaultMarkGeocode: false // Prevent automatic marker placement
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
 
-    })
-    .on('markgeocode', function(e) {
-        const { center } = e.geocode; // Get geocoded center coordinates
-        L.marker(center).addTo(map) // Add marker at the location
-            .bindPopup(`Coordinates: ${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`)
-            .openPopup();
-        map.setView(center, 15); // Center map on the selected location
-        console.log(`Geocoded Location: Lat = ${center.lat}, Lng = ${center.lng}`);
+            map.on('click', function(e) {
+                const { lat, lng } = e.latlng;
+                addMarker(lat, lng);
+            });
 
-        // Notify Android app with the selected coordinates
-        if (window.Android && window.Android.sendCoordinates) {
-            window.Android.sendCoordinates(center.lat, center.lng);
-        }
-    })
-    .addTo(map);
+            isMapInitialized = true;
+            console.log('Map initialized successfully');
 
-    // Allow map size adjustment
-    map.invalidateSize();
-
-    // Enable click-to-add-marker functionality
-    map.on('click', function(e) {
-        const { lat, lng } = e.latlng;
-        L.marker([lat, lng]).addTo(map)
-            .bindPopup(`Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`)
-            .openPopup();
-    });
-
-    // Search address function
-function searchAddress(address) {
-    console.log(`Received address to search: ${address}`); // Log the input address
-
-    const geocoder = L.Control.Geocoder.nominatim(); // Initialize the geocoder
-    geocoder.geocode(address, function(results) {
-        console.log(`Geocoding results for "${address}":`, results); // Log the geocoding results
-
-        if (results && results.length > 0) {
-            const result = results[0];
-            const { lat, lng } = result.center;
-
-            console.log(`Geocoded location: Lat = ${lat}, Lng = ${lng}`); // Log the coordinates
-
-            // Add marker to the map
-            L.marker([lat, lng]).addTo(map)
-                .bindPopup(`Found: ${address}`)
-                .openPopup();
-            map.setView([lat, lng], 15); // Center the map on the location
-
-            // Send coordinates back to Android
-            if (window.Android && window.Android.sendCoordinates) {
-                console.log(`Sending coordinates to Android: Lat = ${lat}, Lng = ${lng}`);
-                window.Android.sendCoordinates(lat, lng);
+            if (window.Android && window.Android.onMapReady) {
+                console.log('Notifying Android that map is ready');
+                window.Android.onMapReady();
             }
-        } else {
-            console.error(`No results found for address: "${address}"`); // Log if no results
-            alert("Address not found!");
+        } catch (error) {
+            console.log('Error initializing map:', error);
+            if (window.Android && window.Android.onSearchError) {
+                window.Android.onSearchError('Error initializing map: ' + error.message);
+            }
         }
-    });
-}
+    }
 
+    function addMarker(lat, lng, popupText) {
+        console.log('Adding marker at:', lat, lng);
+
+        if (currentMarker) {
+            map.removeLayer(currentMarker);
+        }
+
+        currentMarker = L.marker([lat, lng]).addTo(map);
+        if (popupText) {
+            currentMarker.bindPopup(popupText).openPopup();
+        }
+
+        map.setView([lat, lng], 17);
+
+        if (window.Android && window.Android.sendCoordinates) {
+            window.Android.sendCoordinates(lat, lng);
+        }
+    }
+
+    async function searchAddress(address) {
+        console.log('Searching for address:', address);
+
+        if (!map || !isMapInitialized) {
+            console.log('Map not initialized yet');
+            return;
+        }
+
+        try {
+            const encodedAddress = encodeURIComponent(address);
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&countrycodes=il&limit=1`;
+            console.log('Geocoding URL:', url);
+
+            const response = await fetch(url);
+            const data = await response.json();
+            console.log('Geocoding response:', data);
+
+            if (data && data.length > 0) {
+                const result = data[0];
+                const lat = parseFloat(result.lat);
+                const lon = parseFloat(result.lon);
+                console.log('Location found:', lat, lon);
+
+                addMarker(lat, lon, address);
+            } else {
+                const error = 'No results found for: ' + address;
+                console.log(error);
+                if (window.Android && window.Android.onSearchError) {
+                    window.Android.onSearchError(error);
+                }
+            }
+        } catch (error) {
+            console.log('Error in searchAddress:', error);
+            if (window.Android && window.Android.onSearchError) {
+                window.Android.onSearchError('Search error: ' + error.message);
+            }
+        }
+    }
+
+    // Initialize map when the page loads
+    window.onload = function() {
+        console.log('Window loaded');
+        initMap();
+    };
+
+    // Function called by WebView when it's ready
+    function onWebViewReady() {
+        console.log('WebView ready');
+        if (!isMapInitialized) {
+            console.log('Initializing map from WebView ready callback');
+            initMap();
+        }
+    }
 </script>
 </body>
 </html>
