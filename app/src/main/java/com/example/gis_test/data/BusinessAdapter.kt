@@ -5,17 +5,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.gis_test.databinding.BusinessItemBinding
 import com.example.gis_test.data.Business
 
-class BusinessAdapter(private val onShortClick: (Business) -> Unit,
-                      private val onLongPress: (Business) -> Unit
-) : RecyclerView.Adapter<BusinessAdapter.BusinessViewHolder>() {
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 
-    private val businesses = mutableListOf<Business>()
-
-    fun submitList(newBusinesses: List<Business>) {
-        businesses.clear()
-        businesses.addAll(newBusinesses)
-        notifyDataSetChanged()
-    }
+class BusinessAdapter(
+    private val onShortClick: (Business) -> Unit,
+    private val onLongPress: (Business) -> Unit
+) : ListAdapter<Business, BusinessAdapter.BusinessViewHolder>(BusinessDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BusinessViewHolder {
         val binding =
@@ -24,7 +20,7 @@ class BusinessAdapter(private val onShortClick: (Business) -> Unit,
     }
 
     override fun onBindViewHolder(holder: BusinessViewHolder, position: Int) {
-        val business = businesses[position]
+        val business = getItem(position)
         holder.bind(business)
 
         // Handle short press to trigger the callback
@@ -39,8 +35,6 @@ class BusinessAdapter(private val onShortClick: (Business) -> Unit,
         }
     }
 
-    override fun getItemCount(): Int = businesses.size
-
     class BusinessViewHolder(private val binding: BusinessItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
@@ -50,6 +44,16 @@ class BusinessAdapter(private val onShortClick: (Business) -> Unit,
             binding.businessAddress.text = "${business.street} ${business.streetNumber}"
             binding.businessHours.text = "${business.openingHours} - ${business.closingHours}"
             binding.businessDescription.text = business.description
+        }
+    }
+
+    class BusinessDiffCallback : DiffUtil.ItemCallback<Business>() {
+        override fun areItemsTheSame(oldItem: Business, newItem: Business): Boolean {
+            return oldItem.businessId == newItem.businessId
+        }
+
+        override fun areContentsTheSame(oldItem: Business, newItem: Business): Boolean {
+            return oldItem == newItem
         }
     }
 }

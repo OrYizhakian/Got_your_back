@@ -14,7 +14,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.gis_test.R
 import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.data.Business
-import com.example.gis_test.databinding.SignupSecPageBinding
+import com.example.gis_test.databinding.BusinessSignupPageBinding
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -33,7 +33,7 @@ fun loadStreetsFromCsv(context: Context): List<String> {
 }
 
 class SecondSignUpFragment : Fragment() {
-    private var _binding: SignupSecPageBinding? = null
+    private var _binding: BusinessSignupPageBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var categories: Array<String>
@@ -45,7 +45,7 @@ class SecondSignUpFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = SignupSecPageBinding.inflate(inflater, container, false)
+        _binding = BusinessSignupPageBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -126,13 +126,6 @@ class SecondSignUpFragment : Fragment() {
             return
         }
 
-        val businessId = arguments?.getLong("businessId") ?: -1L
-        if (businessId == -1L) {
-            Toast.makeText(requireContext(), "Error: Business ID is missing.", Toast.LENGTH_SHORT)
-                .show()
-            return
-        }
-
         lifecycleScope.launch {
             try {
                 // Debug log: Check values before saving
@@ -140,7 +133,7 @@ class SecondSignUpFragment : Fragment() {
 
                 val business = Business(
                     userId = arguments?.getLong("userId") ?: -1L,
-                    businessId = businessId,
+                    businessId = 0L, // 0 if your database auto-generates the ID
                     name = businessName,
                     category = businessCategory,
                     street = businessStreet,
@@ -150,17 +143,14 @@ class SecondSignUpFragment : Fragment() {
                     description = businessDescription
                 )
 
-                // Update the business in the database
-                AppDatabase.getDatabase(requireContext()).businessDao().updateBusiness(business)
+                AppDatabase.getDatabase(requireContext()).businessDao().insertBusiness(business)
 
-                // Debug log: Confirm successful update
-                Log.d("SecondSignUpFragment", "Business updated successfully: $business")
+                Log.d("SecondSignUpFragment", "New business saved successfully: $business")
 
-                // Show success message
-                Toast.makeText(requireContext(), "Business updated successfully!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Business saved successfully!", Toast.LENGTH_SHORT).show()
 
                 // Go back to the previous screen
-                findNavController().popBackStack()
+                findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
             } catch (e: Exception) {
                 // Show error message
                 Toast.makeText(requireContext(), "Failed to update business.", Toast.LENGTH_SHORT).show()

@@ -41,7 +41,7 @@
         android:id="@+id/secondSignUpFragment"
         android:name="com.example.gis_test.ui.SecondSignUpFragment"
         android:label="signup_sec_page"
-        tools:layout="@layout/signup_sec_page" >
+        tools:layout="@layout/business_signup_page" >
         <action
             android:id="@+id/action_secondSignUpFragment_to_loginPageFragment"
             app:destination="@id/loginPageFragment" />
@@ -62,15 +62,31 @@
             android:id="@+id/action_myBusinessesFragment_to_businessDetailsFragment"
             app:destination="@id/businessDetailsFragment" />
         <action
-            android:id="@+id/action_myBusinessesFragment_to_secondSignUpFragment"
-            app:destination="@id/secondSignUpFragment" />
+            android:id="@+id/action_myBusinessesFragment_to_addNewBusinessFragment"
+            app:destination="@id/addNewBusinessFragment" />
     </fragment>
     <fragment
         android:id="@+id/businessDetailsFragment"
         android:name="BusinessDetailsFragment"
         android:label="BusinessDetailsFragment" >
         <action
-            android:id="@+id/action_businessDetailsFragment_to_secondSignUpFragment"
-            app:destination="@id/secondSignUpFragment" />
+            android:id="@+id/action_businessDetailsFragment_to_businessUpdateFragment"
+            app:destination="@id/businessUpdateFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/addNewBusinessFragment"
+        android:name="com.example.gis_test.ui.AddNewBusinessFragment"
+        android:label="AddNewBusinessFragment" >
+        <action
+            android:id="@+id/action_addNewBusinessFragment_to_myBusinessesFragment"
+            app:destination="@id/myBusinessesFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/businessUpdateFragment"
+        android:name="com.example.gis_test.ui.BusinessUpdateFragment"
+        android:label="BusinessUpdateFragment" >
+        <action
+            android:id="@+id/action_businessUpdateFragment_to_businessDetailsFragment"
+            app:destination="@id/businessDetailsFragment" />
     </fragment>
 </navigation>

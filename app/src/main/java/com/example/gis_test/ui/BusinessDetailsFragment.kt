@@ -1,4 +1,5 @@
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,56 +31,27 @@ class BusinessDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val businessId = arguments?.getLong("businessId") ?: -1L
-        if (businessId == -1L) {
-            // Handle missing business ID
-            Toast.makeText(requireContext(), "Error: Business ID is missing.", Toast.LENGTH_SHORT)
-                .show()
-            return
-        }
+        // Disable edit button until business is loaded
+        binding.editButton.isEnabled = false
 
-        // Fetch business details from the database
         lifecycleScope.launch {
-            business = AppDatabase.getDatabase(requireContext()).businessDao()
-                .getBusinessById(businessId)!!
-            if (business != null) {
+            val businessId = arguments?.getLong("businessId") ?: -1L
+            if (businessId == -1L) {
+                Toast.makeText(requireContext(), "Business ID is missing.", Toast.LENGTH_SHORT).show()
+                findNavController().popBackStack()
+                return@launch
+            }
+
+            val fetchedBusiness = AppDatabase.getDatabase(requireContext()).businessDao().getBusinessById(businessId)
+
+            if (fetchedBusiness != null) {
+                business = fetchedBusiness
+                binding.editButton.isEnabled = true // Enable edit button
                 displayBusinessDetails(business)
             } else {
-                Toast.makeText(requireContext(), "Error: Business not found.", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(requireContext(), "Business not found.", Toast.LENGTH_SHORT).show()
+                findNavController().popBackStack()
             }
-        }
-
-        // Edit button click listener
-        binding.editButton.setOnClickListener {
-            toggleEditMode()
-        }
-
-        // Save button click listener
-        binding.saveButton.setOnClickListener {
-            val updatedBusiness =
-                Business(userId = business.userId,  // השתמש ב-userId של העסק שנמצא ב-business
-                    businessId = businessId,  // השתמש ב-businessId שקיבלת ב-arguments
-                    name = binding.businessName.text.toString(),
-                    category = binding.businessCategory.text.toString(),
-                    street = binding.businessAddress.text.toString(),
-                    streetNumber = "",  // תוודא שיש לך EditText בשם זה
-                    openingHours = binding.businessHours.text.toString(),
-                    closingHours = "",  // תוודא שיש לך EditText נוסף לשעות סגירה
-                    description = binding.businessDescription.text.toString()
-                        .takeIf { it.isNotEmpty() })
-
-            lifecycleScope.launch {
-                AppDatabase.getDatabase(requireContext()).businessDao()
-                    .updateBusiness(updatedBusiness)
-                toggleEditMode()
-                displayBusinessDetails(updatedBusiness)
-            }
-        }
-
-        // Cancel button click listener
-        binding.cancelButton.setOnClickListener {
-            toggleEditMode()
         }
     }
 
@@ -102,24 +74,27 @@ class BusinessDetailsFragment : Fragment() {
 
     private fun toggleEditMode() {
         binding.editButton.setOnClickListener {
-            val bundle = Bundle().apply {
-                putLong("userId", business.userId)
-                putString("name", business.name)
-                putString("category", business.category)
-                putString("street", business.street ?: "") // טיפול ב-null
-                putString("streetNumber", business.streetNumber ?: "") // טיפול ב-null
-                putString("openingHours", business.openingHours ?: "") // טיפול ב-null
-                putString("closingHours", business.closingHours ?: "") // טיפול ב-null
-                putString("description", business.description ?: "") // טיפול ב-null
+            if (::business.isInitialized) {
+                val bundle = Bundle().apply {
+                    putLong("userId", business.userId)
+                    putString("name", business.name)
+                    putString("category", business.category)
+                    putString("street", business.street ?: "")
+                    putString("streetNumber", business.streetNumber ?: "")
+                    putString("openingHours", business.openingHours ?: "")
+                    putString("closingHours", business.closingHours ?: "")
+                    putString("description", business.description ?: "")
+                }
+                findNavController().navigate(
+                    R.id.action_businessDetailsFragment_to_businessUpdateFragment, bundle
+                )
+            } else {
+                // Handle the case where the business is not yet initialized
+                Toast.makeText(requireContext(), "Business data is not available yet.", Toast.LENGTH_SHORT).show()
             }
-            findNavController().navigate(
-                R.id.action_businessDetailsFragment_to_secondSignUpFragment, bundle
-            )
-
         }
-
-
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
