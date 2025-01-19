@@ -4,19 +4,18 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
-
-@Database(entities = [User::class, Business::class], version = 3, exportSchema = false)
-
+@Database(entities = [User::class, Business::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun businessDao(): BusinessDao
-    abstract fun userDao(): UserDao  // הוסף את ה-UserDao כאן
+    abstract fun userDao(): UserDao
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
-
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -26,21 +25,25 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Add any schema changes between version 2 and 3
-                // If no actual changes, can be empty but we need the migration
+                // Add schema changes here if needed
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Create the missing index for the `userId` column in the `businesses` table
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_businesses_userId ON businesses(userId)")
+            }
+        }
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-
                     "got_your_back_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build()
 
                 INSTANCE = instance
