@@ -5,8 +5,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.gis_test.databinding.BusinessItemBinding
 import com.example.gis_test.data.Business
 
-class BusinessAdapter(private val onLongPress: (Business) -> Unit) :
-    RecyclerView.Adapter<BusinessAdapter.BusinessViewHolder>() {
+class BusinessAdapter(private val onShortClick: (Business) -> Unit,
+                      private val onLongPress: (Business) -> Unit
+) : RecyclerView.Adapter<BusinessAdapter.BusinessViewHolder>() {
 
     private val businesses = mutableListOf<Business>()
 
@@ -26,7 +27,12 @@ class BusinessAdapter(private val onLongPress: (Business) -> Unit) :
         val business = businesses[position]
         holder.bind(business)
 
-        // Handle long-press to trigger the callback
+        // Handle short press to trigger the callback
+        holder.itemView.setOnClickListener {
+            onShortClick(business)
+        }
+
+        // Handle long press to trigger the callback
         holder.itemView.setOnLongClickListener {
             onLongPress(business)
             true
@@ -35,10 +41,8 @@ class BusinessAdapter(private val onLongPress: (Business) -> Unit) :
 
     override fun getItemCount(): Int = businesses.size
 
-
     class BusinessViewHolder(private val binding: BusinessItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-
 
         fun bind(business: Business) {
             binding.businessName.text = business.name

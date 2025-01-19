@@ -24,13 +24,22 @@ class MyBusinessesFragment : Fragment() {
         _binding = MyBusinessScreenBinding.inflate(inflater, container, false)
 
         // Set up RecyclerView
-        val adapter = BusinessAdapter{ business ->
-            // Navigate to MapFragment with the business's address
+        val adapter = BusinessAdapter(onShortClick = { business ->
+            // Navigate to BusinessDetailsFragment
             val bundle = Bundle().apply {
-                putString("street", "${business.street} ${business.streetNumber}")
+                putLong("businessId", business.businessId)
             }
-            findNavController().navigate(R.id.action_myBusinessesFragment_to_mapFragment2, bundle)
-        }
+            findNavController().navigate(R.id.action_myBusinessesFragment_to_businessDetailsFragment, bundle)
+        },
+            onLongPress = { business ->
+                // Navigate to MapFragment with the business's address
+                val bundle = Bundle().apply {
+                    putString("street", "${business.street} ${business.streetNumber}")
+                }
+                findNavController().navigate(R.id.action_myBusinessesFragment_to_mapFragment2, bundle)
+            }
+        )
+        binding.businessRecyclerView.adapter = adapter
 
 
 
