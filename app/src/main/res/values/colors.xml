@@ -6,7 +6,14 @@
     <color name="blue">#FFA1C6EA</color>
     <color name="darkblue">#FF123456</color>
     <color name="lightblue">#FFD0E3F5</color>
-    <style name="AppTheme.Picker" parent="Theme.AppCompat.Light.NoActionBar" >
+
+    <style name="AppTheme.Picker" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:textColorPrimary">@android:color/black</item>
+
     </style>
+
+    <style name="Theme.GIS_TEST.NoActionBar" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- ערכת נושא ללא Action Bar -->
+    </style>
+
 </resources>

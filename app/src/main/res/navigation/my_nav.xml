@@ -56,10 +56,21 @@
         android:name="MyBusinessesFragment"
         android:label="MyBusinessesFragment" >
         <action
-            android:id="@+id/action_myBusinessesFragment_to_secondSignUpFragment"
-            app:destination="@id/secondSignUpFragment" />
-        <action
             android:id="@+id/action_myBusinessesFragment_to_mapFragment2"
             app:destination="@id/mapFragment2" />
+        <action
+            android:id="@+id/action_myBusinessesFragment_to_businessDetailsFragment"
+            app:destination="@id/businessDetailsFragment" />
+        <action
+            android:id="@+id/action_myBusinessesFragment_to_secondSignUpFragment"
+            app:destination="@id/secondSignUpFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/businessDetailsFragment"
+        android:name="BusinessDetailsFragment"
+        android:label="BusinessDetailsFragment" >
+        <action
+            android:id="@+id/action_businessDetailsFragment_to_secondSignUpFragment"
+            app:destination="@id/secondSignUpFragment" />
     </fragment>
 </navigation>

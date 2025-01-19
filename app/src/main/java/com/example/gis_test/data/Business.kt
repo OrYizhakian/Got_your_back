@@ -13,11 +13,12 @@ import androidx.room.PrimaryKey
             childColumns = ["userId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [androidx.room.Index(value = ["userId"])] // יצירת אינדקס עבור userId
 )
 data class Business(
     @PrimaryKey(autoGenerate = true) val businessId: Long = 0,
-    val userId: Long,
+    val userId: Long,  // השדה הזה שומר את ה-User ID
     val name: String,
     val category: String,
     val street: String,
