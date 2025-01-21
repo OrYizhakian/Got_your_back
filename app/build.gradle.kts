@@ -14,7 +14,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.GotYourBack"
+        applicationId = "com.example.gis_test"
         minSdk = 29
         targetSdk = 35
         versionCode = 1
