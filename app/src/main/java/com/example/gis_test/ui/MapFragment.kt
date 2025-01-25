@@ -9,120 +9,120 @@ import android.view.ViewGroup
 import android.webkit.*
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.example.gis_test.data.AppDatabase
+import com.example.gis_test.data.Business
 import com.example.gis_test.databinding.MapviewBinding
+import kotlinx.coroutines.launch
 
 class MapFragment : Fragment() {
     private var _binding: MapviewBinding? = null
     private val binding get() = _binding!!
-    private var pendingSearch: String? = null
+    private var businessToFocus: Business? = null
+    private var userId: Long? = null
 
     @JavascriptInterface
     fun onMapReady() {
-        Log.d("MapFragment", "onMapReady called")
         activity?.runOnUiThread {
-            pendingSearch?.let { address ->
-                Log.d("MapFragment", "Executing pending search for: $address")
-                searchAddressInMap(address)
-            }
+            loadBusinesses()
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        userId = arguments?.getLong("userId")
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = MapviewBinding.inflate(inflater, container, false)
 
-        // Store pending search if provided in arguments
-        pendingSearch = arguments?.getString("street")?.let { "$it, Tel Aviv, Israel" }
-        Log.d("MapFragment", "Pending search address: $pendingSearch")
+        binding.mapWebView.apply {
+            settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                cacheMode = WebSettings.LOAD_NO_CACHE
+                setSupportZoom(true)
+                builtInZoomControls = true
+                displayZoomControls = false
+                useWideViewPort = true
+                loadWithOverviewMode = true
+            }
 
-        // Initialize WebView
-        val webView: WebView = binding.mapWebView
-        webView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            cacheMode = WebSettings.LOAD_NO_CACHE
-            // Add debugging for WebView
+            setOnTouchListener { v, event ->
+                v.parent.requestDisallowInterceptTouchEvent(true)
+                v.onTouchEvent(event)
+            }
+
             WebView.setWebContentsDebuggingEnabled(true)
+            addJavascriptInterface(this@MapFragment, "Android")
+
+            webViewClient = object : WebViewClient() {
+                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                    super.onPageStarted(view, url, favicon)
+                }
+
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    view?.evaluateJavascript("""
+                        console.log = function(message) {
+                            Android.consoleLog(message);
+                        };
+                    """.trimIndent(), null)
+                    view?.evaluateJavascript(
+                        "if (typeof onWebViewReady === 'function') { onWebViewReady(); }",
+                        null
+                    )
+                }
+
+                override fun onReceivedError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    error: WebResourceError?
+                ) {
+                    super.onReceivedError(view, request, error)
+                    Log.e("MapFragment", "WebView error: ${error?.description}")
+                }
+            }
         }
 
-        // Add JavaScript Interface for communication
-        webView.addJavascriptInterface(this, "Android")
-
-        // Set up WebViewClient to handle page load
-        webView.webViewClient = object : WebViewClient() {
-            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                super.onPageStarted(view, url, favicon)
-                Log.d("MapFragment", "Page loading started: $url")
-            }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                Log.d("MapFragment", "Page loading finished: $url")
-                // Inject console log interceptor
-                view?.evaluateJavascript("""
-                    console.log = function(message) {
-                        Android.consoleLog(message);
-                    };
-                """.trimIndent(), null)
-                // Notify JavaScript that WebView is ready
-                view?.evaluateJavascript("if (typeof onWebViewReady === 'function') { onWebViewReady(); }", null)
-            }
-
-            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                super.onReceivedError(view, request, error)
-                Log.e("MapFragment", "WebView error: ${error?.description}")
-            }
-        }
-
-        // Load the map.html file from assets
-        webView.loadUrl("file:///android_asset/map.html")
-
+        binding.mapWebView.loadUrl("file:///android_asset/map.html")
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        pendingSearch?.let { address ->
-            Log.d("MapFragment", "Ready to search for address: $address")
-            Toast.makeText(requireContext(), "Searching for: $address", Toast.LENGTH_SHORT).show()
+    private fun loadBusinesses() {
+        lifecycleScope.launch {
+            try {
+                val db = AppDatabase.getDatabase(requireContext())
+                val businesses = if (userId != null) {
+                    db.businessDao().getBusinessesByUserId(userId!!)
+                } else {
+                    db.businessDao().getAllBusinesses()
+                }
+
+                val businessesJson = businesses.map { business ->
+                    """{
+                        "id": ${business.businessId},
+                        "name": "${business.name.replace("\"", "\\\"")}",
+                        "address": "${business.street} ${business.streetNumber}, Tel Aviv, Israel",
+                        "category": "${business.category}"
+                    }"""
+                }.joinToString(",", "[", "]")
+
+                val script = "loadBusinesses($businessesJson, ${businessToFocus?.businessId ?: "null"});"
+                binding.mapWebView.evaluateJavascript(script, null)
+            } catch (e: Exception) {
+                Log.e("MapFragment", "Error loading businesses", e)
+            }
         }
     }
 
-    // Function to send address to the WebView for searching
-    // Update just the searchAddressInMap function in your MapFragment:
-
-    private fun searchAddressInMap(address: String) {
-        try {
-            val escapedAddress = address.replace("'", "\\'") // Escape single quotes
-            val searchScript = """
-            console.log('Executing search for: $escapedAddress');
-            if (typeof searchAddress === 'function') { 
-                try {
-                    searchAddress('$escapedAddress');
-                } catch (error) {
-                    console.log('Error executing searchAddress:', error);
-                    Android.onSearchError('Error: ' + error.message);
-                }
-            } else { 
-                console.log('searchAddress function not found'); 
-                Android.onSearchError('Search function not available');
-            }
-        """.trimIndent()
-
-            Log.d("MapFragment", "Executing search script: $searchScript")
-            binding.mapWebView.evaluateJavascript(searchScript) { result ->
-                Log.d("MapFragment", "Search script result: $result")
-            }
-        } catch (e: Exception) {
-            Log.e("MapFragment", "Error searching address", e)
-            Toast.makeText(
-                requireContext(),
-                "Error searching address: ${e.message}",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+    fun focusBusiness(business: Business) {
+        businessToFocus = business
+        loadBusinesses()
     }
 
     @JavascriptInterface
@@ -130,28 +130,16 @@ class MapFragment : Fragment() {
         Log.d("WebView Console", message)
     }
 
-    // JavaScript Interface for communication
     @JavascriptInterface
     fun sendCoordinates(lat: Double, lng: Double) {
         Log.d("MapFragment", "Received coordinates: $lat, $lng")
-        activity?.runOnUiThread {
-            Toast.makeText(
-                requireContext(),
-                "Location found at: $lat, $lng",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
     }
 
     @JavascriptInterface
     fun onSearchError(error: String) {
         Log.e("MapFragment", "Search error: $error")
         activity?.runOnUiThread {
-            Toast.makeText(
-                requireContext(),
-                "Error finding location: $error",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(requireContext(), "Error finding location: $error", Toast.LENGTH_SHORT).show()
         }
     }
 

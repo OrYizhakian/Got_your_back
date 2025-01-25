@@ -53,7 +53,7 @@
         tools:layout="@layout/mapview" />
     <fragment
         android:id="@+id/myBusinessesFragment"
-        android:name="MyBusinessesFragment"
+        android:name="com.example.gis_test.ui.MyBusinessesFragment"
         android:label="MyBusinessesFragment" >
         <action
             android:id="@+id/action_myBusinessesFragment_to_mapFragment2"

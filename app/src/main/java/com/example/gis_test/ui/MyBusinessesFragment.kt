@@ -1,3 +1,5 @@
+package com.example.gis_test.ui
+
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -25,10 +27,8 @@ class MyBusinessesFragment : Fragment() {
     ): View {
         _binding = MyBusinessScreenBinding.inflate(inflater, container, false)
 
-        // Set up RecyclerView adapter
         adapter = BusinessAdapter(
             onShortClick = { business ->
-                // Navigate to BusinessDetailsFragment
                 val bundle = Bundle().apply {
                     putLong("businessId", business.businessId)
                 }
@@ -38,22 +38,25 @@ class MyBusinessesFragment : Fragment() {
                 )
             },
             onLongPress = { business ->
-                // Navigate to MapFragment with the business's address
                 val bundle = Bundle().apply {
-                    putString("street", "${business.street} ${business.streetNumber}")
+                    putLong("userId", arguments?.getLong("userId") ?: -1L)
                 }
-                findNavController().navigate(
-                    R.id.action_myBusinessesFragment_to_mapFragment2,
-                    bundle
-                )
+                findNavController().navigate(R.id.action_myBusinessesFragment_to_mapFragment2, bundle).also {
+                    parentFragmentManager.findFragmentById(R.id.nav_host_fragment)
+                        ?.childFragmentManager
+                        ?.fragments
+                        ?.filterIsInstance<MapFragment>()
+                        ?.firstOrNull()
+                        ?.focusBusiness(business)
+                }
             }
         )
 
-        // Set up RecyclerView
-        binding.businessRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.businessRecyclerView.adapter = adapter
+        binding.businessRecyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@MyBusinessesFragment.adapter
+        }
 
-        // Floating action button to add a new business
         binding.fabAddBusiness.setOnClickListener {
             val userId = arguments?.getLong("userId") ?: -1L
             if (userId != -1L) {
@@ -65,11 +68,10 @@ class MyBusinessesFragment : Fragment() {
                     bundle
                 )
             } else {
-                Log.e("MyBusinessesFragment", "User ID missing, cannot navigate to AddNewBusinessFragment")
+                Log.e("MyBusinessesFragment", "User ID missing")
             }
         }
 
-        // Back button functionality
         binding.mrsBackButton.setOnClickListener {
             requireActivity().onBackPressed()
         }
@@ -80,7 +82,6 @@ class MyBusinessesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Fetch businesses based on userId from arguments
         val userId = arguments?.getLong("userId") ?: -1L
         if (userId == -1L) {
             Log.e("MyBusinessesFragment", "User ID missing")
@@ -89,7 +90,6 @@ class MyBusinessesFragment : Fragment() {
             return
         }
 
-        // Load data from database
         lifecycleScope.launch {
             val businesses = AppDatabase.getDatabase(requireContext())
                 .businessDao()

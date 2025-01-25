@@ -16,45 +16,126 @@
         #map-wrapper {
             height: 100%;
             width: 100%;
-            display: flex;
-            flex-direction: column;
         }
         #map {
-            flex: 1;
+            height: 100%;
             width: 100%;
+        }
+        .filter-button {
+            position: absolute;
+            left: 10px;
+            top: 100px;
+            z-index: 1000;
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: 2px solid rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+        .filter-control {
+    position: absolute;
+    left: 10px;
+    top: 140px;
+    z-index: 1000;
+    background: white;
+    padding: 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border: 2px solid rgba(0,0,0,0.2);
+    max-height: 400px; /* Increased from 300px */
+    overflow-y: auto;
+    display: none;
+}
+        .filter-control.show {
+            display: block;
+        }
+        .category-checkbox {
+            display: block;
+            margin: 5px 0;
+        }
+        .filter-control label {
+            margin-left: 5px;
+            font-size: 14px;
+        }
+        #selectAll {
+            margin-bottom: 10px;
+            padding: 5px;
+            width: 100%;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
+<button class="filter-button" onclick="toggleFilterMenu()">Filter Categories</button>
+<div class="filter-control" id="filterMenu">
+    <button id="selectAll" onclick="toggleAll()">Select All</button>
+    <label class="category-checkbox">
+        <input type="checkbox" value="Restaurant" checked> Restaurant
+    </label>
+    <label class="category-checkbox">
+        <input type="checkbox" value="Coffee place" checked> Coffee place
+    </label>
+    <label class="category-checkbox">
+        <input type="checkbox" value="Beauty saloon" checked> Beauty saloon
+    </label>
+    <label class="category-checkbox">
+        <input type="checkbox" value="Grocery store" checked> Grocery store
+    </label>
+    <label class="category-checkbox">
+        <input type="checkbox" value="Clothes store" checked> Clothes store
+    </label>
+    <label class="category-checkbox">
+        <input type="checkbox" value="Book store" checked> Book store
+    </label>
+    <label class="category-checkbox">
+        <input type="checkbox" value="Gym" checked> Gym
+    </label>
+    <label class="category-checkbox">
+        <input type="checkbox" value="Pharmacy" checked> Pharmacy
+    </label>
+    <label class="category-checkbox">
+        <input type="checkbox" value="Hardware store" checked> Hardware store
+    </label>
+    <label class="category-checkbox">
+        <input type="checkbox" value="Jewelry store" checked> Jewelry store
+    </label>
+</div>
 <div id="map-wrapper">
     <div id="map"></div>
 </div>
 
 <script>
     let map;
-    let currentMarker = null;
+    let markers = new Map();
     let isMapInitialized = false;
+    let allBusinesses = [];
+    let allSelected = true;
 
     function initMap() {
         console.log('Initializing map...');
         try {
-            map = L.map('map').setView([32.0853, 34.7818], 15); // Center at Tel Aviv
+            map = L.map('map').setView([32.0853, 34.7818], 15);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
 
-            map.on('click', function(e) {
-                const { lat, lng } = e.latlng;
-                addMarker(lat, lng);
+            document.querySelectorAll('.category-checkbox input').forEach(checkbox => {
+                checkbox.addEventListener('change', filterMarkers);
+            });
+
+            // Close filter menu when clicking outside
+            map.addEventListener('click', () => {
+                document.getElementById('filterMenu').classList.remove('show');
             });
 
             isMapInitialized = true;
-            console.log('Map initialized successfully');
-
             if (window.Android && window.Android.onMapReady) {
-                console.log('Notifying Android that map is ready');
                 window.Android.onMapReady();
             }
         } catch (error) {
@@ -65,75 +146,96 @@
         }
     }
 
-    function addMarker(lat, lng, popupText) {
-        console.log('Adding marker at:', lat, lng);
-
-        if (currentMarker) {
-            map.removeLayer(currentMarker);
-        }
-
-        currentMarker = L.marker([lat, lng]).addTo(map);
-        if (popupText) {
-            currentMarker.bindPopup(popupText).openPopup();
-        }
-
-        map.setView([lat, lng], 17);
-
-        if (window.Android && window.Android.sendCoordinates) {
-            window.Android.sendCoordinates(lat, lng);
-        }
+    function toggleFilterMenu() {
+        document.getElementById('filterMenu').classList.toggle('show');
     }
 
-    async function searchAddress(address) {
-        console.log('Searching for address:', address);
+    function toggleAll() {
+        allSelected = !allSelected;
+        document.querySelectorAll('.category-checkbox input').forEach(checkbox => {
+            checkbox.checked = allSelected;
+        });
+        document.getElementById('selectAll').textContent = allSelected ? 'Select All' : 'Unselect All';
+        filterMarkers();
+    }
 
-        if (!map || !isMapInitialized) {
-            console.log('Map not initialized yet');
-            return;
-        }
+    function filterMarkers() {
+        const selectedCategories = Array.from(document.querySelectorAll('.category-checkbox input:checked'))
+            .map(checkbox => checkbox.value);
+        const bounds = [];
 
-        try {
-            const encodedAddress = encodeURIComponent(address);
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&countrycodes=il&limit=1`;
-            console.log('Geocoding URL:', url);
+        markers.forEach((markerInfo, id) => {
+            const business = allBusinesses.find(b => b.id === id);
+            if (!business) return;
 
-            const response = await fetch(url);
-            const data = await response.json();
-            console.log('Geocoding response:', data);
+            const shouldShow = selectedCategories.includes(business.category);
+            const marker = markerInfo.marker;
 
-            if (data && data.length > 0) {
-                const result = data[0];
-                const lat = parseFloat(result.lat);
-                const lon = parseFloat(result.lon);
-                console.log('Location found:', lat, lon);
-
-                addMarker(lat, lon, address);
+            if (shouldShow) {
+                marker.addTo(map);
+                bounds.push([markerInfo.lat, markerInfo.lon]);
             } else {
-                const error = 'No results found for: ' + address;
-                console.log(error);
-                if (window.Android && window.Android.onSearchError) {
-                    window.Android.onSearchError(error);
-                }
+                marker.remove();
             }
-        } catch (error) {
-            console.log('Error in searchAddress:', error);
-            if (window.Android && window.Android.onSearchError) {
-                window.Android.onSearchError('Search error: ' + error.message);
-            }
+        });
+
+        if (bounds.length > 0) {
+            map.fitBounds(bounds);
         }
     }
 
-    // Initialize map when the page loads
-    window.onload = function() {
-        console.log('Window loaded');
-        initMap();
-    };
+    async function loadBusinesses(businesses, focusBusinessId) {
+        allBusinesses = businesses;
+        markers.forEach(marker => map.removeLayer(marker.marker));
+        markers.clear();
 
-    // Function called by WebView when it's ready
+        const geocodePromises = businesses.map(async business => {
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(business.address)}&limit=1`
+                );
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const { lat, lon } = data[0];
+                    const marker = L.marker([lat, lon])
+                        .bindPopup(`
+                            <b>${business.name}</b><br>
+                            ${business.category}<br>
+                            ${business.address}
+                        `)
+                        .addTo(map);
+
+                    markers.set(business.id, {
+                        marker,
+                        lat: parseFloat(lat),
+                        lon: parseFloat(lon)
+                    });
+
+                    if (business.id === focusBusinessId) {
+                        map.setView([lat, lon], 17);
+                        marker.openPopup();
+                    }
+                }
+            } catch (error) {
+                console.error(`Error geocoding business ${business.id}:`, error);
+            }
+        });
+
+        await Promise.all(geocodePromises);
+
+        if (!focusBusinessId && markers.size > 0) {
+            const bounds = L.latLngBounds(
+                Array.from(markers.values()).map(m => [m.lat, m.lon])
+            );
+            map.fitBounds(bounds);
+        }
+    }
+
+    window.onload = initMap;
+
     function onWebViewReady() {
-        console.log('WebView ready');
         if (!isMapInitialized) {
-            console.log('Initializing map from WebView ready callback');
             initMap();
         }
     }
