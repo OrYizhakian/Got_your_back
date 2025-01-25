@@ -14,8 +14,11 @@ import androidx.navigation.fragment.findNavController
 import com.example.gis_test.R
 import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.data.Business
+import com.example.gis_test.data.User
 import com.example.gis_test.databinding.BusinessSignupPageBinding
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -128,12 +131,27 @@ class SecondSignUpFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                // Debug log: Check values before saving
-                Log.d("SecondSignUpFragment", "Saving business: $businessName, $businessStreet, $businessCategory, $openingHours, $closingHours")
+                // תחילת הפעולה בקורוטינה
 
+                // הוספת משתמש
+                val userName = arguments?.getString("userName", "") ?: ""
+                val userEmail = arguments?.getString("userEmail", "") ?: ""
+                val userPassword = arguments?.getString("userPassword", "") ?: ""
+
+                val user = User(
+                    userName = userName,
+                    email = userEmail,
+                    password = userPassword
+                )
+
+                // הוספת המשתמש למסד הנתונים
+                val userDao = AppDatabase.getDatabase(requireContext()).userDao()
+                val userId = userDao.insertUser(user)
+
+                // הוספת עסק
                 val business = Business(
-                    userId = arguments?.getLong("userId") ?: -1L,
-                    businessId = 0L, // 0 if your database auto-generates the ID
+                    userId = userId,
+                    businessId = 0L, // ID של העסק אם הוא נוצר אוטומטית
                     name = businessName,
                     category = businessCategory,
                     street = businessStreet,
@@ -143,23 +161,23 @@ class SecondSignUpFragment : Fragment() {
                     description = businessDescription
                 )
 
-                AppDatabase.getDatabase(requireContext()).businessDao().insertBusiness(business)
-
-                Log.d("SecondSignUpFragment", "New business saved successfully: $business")
+                val businessDao = AppDatabase.getDatabase(requireContext()).businessDao()
+                businessDao.insertBusiness(business)
 
                 Toast.makeText(requireContext(), "Business saved successfully!", Toast.LENGTH_SHORT).show()
 
-                // Go back to the previous screen
+                // מעבר למסך הבא
                 findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
-            } catch (e: Exception) {
-                // Show error message
-                Toast.makeText(requireContext(), "Failed to update business.", Toast.LENGTH_SHORT).show()
 
-                // Log exception
-                Log.e("SecondSignUpFragment", "Error updating business", e)
+            } catch (e: Exception) {
+                // אם יש שגיאה בשמירה
+                Toast.makeText(requireContext(), "Failed to update business.", Toast.LENGTH_SHORT).show()
+                Log.e("SecondSignUpFragment", "Error saving business", e)
             }
         }
     }
+
+
 
     private fun setupPicker(picker: android.widget.NumberPicker, values: Array<String>) {
         picker.minValue = 0

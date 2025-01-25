@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/my_nav"
     app:startDestination="@id/mainScreenFragment">
+
     <fragment
         android:id="@+id/mainScreenFragment"
         android:name="com.example.gis_test.ui.MainScreenFragment"
@@ -11,11 +12,14 @@
         tools:layout="@layout/main_screen_page" >
         <action
             android:id="@+id/action_mainScreenFragment_to_loginPageFragment"
-            app:destination="@id/loginPageFragment" />
+            app:destination="@id/loginPageFragment"
+            app:popUpTo="@id/loginPageFragment"
+            app:popUpToInclusive="true" />
         <action
             android:id="@+id/action_mainScreenFragment_to_mapFragment2"
             app:destination="@id/mapFragment2" />
     </fragment>
+
     <fragment
         android:id="@+id/loginPageFragment"
         android:name="com.example.gis_test.ui.LoginPageFragment"
@@ -28,6 +32,7 @@
             android:id="@+id/action_loginPageFragment_to_myBusinessesFragment"
             app:destination="@id/myBusinessesFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/signUpFragment"
         android:name="com.example.gis_test.ui.UserSignUpFragment"
@@ -37,6 +42,7 @@
             android:id="@+id/action_signUpFragment_to_secondSignUpFragment"
             app:destination="@id/secondSignUpFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/secondSignUpFragment"
         android:name="com.example.gis_test.ui.SecondSignUpFragment"
@@ -44,13 +50,17 @@
         tools:layout="@layout/business_signup_page" >
         <action
             android:id="@+id/action_secondSignUpFragment_to_loginPageFragment"
-            app:destination="@id/loginPageFragment" />
+            app:destination="@id/loginPageFragment"
+            app:popUpTo="@id/signUpFragment"
+            app:popUpToInclusive="true" />
     </fragment>
+
     <fragment
         android:id="@+id/mapFragment2"
         android:name="com.example.gis_test.ui.MapFragment"
         android:label="mapview"
         tools:layout="@layout/mapview" />
+
     <fragment
         android:id="@+id/myBusinessesFragment"
         android:name="com.example.gis_test.ui.MyBusinessesFragment"
@@ -64,7 +74,13 @@
         <action
             android:id="@+id/action_myBusinessesFragment_to_addNewBusinessFragment"
             app:destination="@id/addNewBusinessFragment" />
+        <action
+            android:id="@+id/action_myBusinessesFragment_to_loginPageFragment"
+            app:destination="@id/loginPageFragment"
+            app:popUpTo="@id/loginPageFragment"
+            app:popUpToInclusive="true" />
     </fragment>
+
     <fragment
         android:id="@+id/businessDetailsFragment"
         android:name="BusinessDetailsFragment"
@@ -73,20 +89,27 @@
             android:id="@+id/action_businessDetailsFragment_to_businessUpdateFragment"
             app:destination="@id/businessUpdateFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/addNewBusinessFragment"
         android:name="com.example.gis_test.ui.AddNewBusinessFragment"
         android:label="AddNewBusinessFragment" >
         <action
             android:id="@+id/action_addNewBusinessFragment_to_myBusinessesFragment"
-            app:destination="@id/myBusinessesFragment" />
+            app:destination="@id/myBusinessesFragment"
+            app:popUpTo="@id/myBusinessesFragment"
+            app:popUpToInclusive="true" />
     </fragment>
+
     <fragment
         android:id="@+id/businessUpdateFragment"
         android:name="com.example.gis_test.ui.BusinessUpdateFragment"
         android:label="BusinessUpdateFragment" >
         <action
             android:id="@+id/action_businessUpdateFragment_to_businessDetailsFragment"
-            app:destination="@id/businessDetailsFragment" />
+            app:destination="@id/businessDetailsFragment"
+            app:popUpTo="@id/businessDetailsFragment"
+            app:popUpToInclusive="true" />
     </fragment>
+
 </navigation>

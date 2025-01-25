@@ -1,5 +1,6 @@
 package com.example.gis_test.ui
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
@@ -33,6 +34,7 @@ class MapFragment : Fragment() {
         userId = arguments?.getLong("userId")
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

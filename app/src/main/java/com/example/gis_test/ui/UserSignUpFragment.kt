@@ -25,58 +25,42 @@ class UserSignUpFragment : Fragment() {
     ): View? {
         _binding = SignupPageBinding.inflate(inflater, container, false)
 
-
         binding.continueBtn.setOnClickListener {
             val userName = binding.usernameEdt.text.toString().trim()
             val userEmail = binding.emailEdt.text.toString().trim()
             val userPassword = binding.passwordEdt.text.toString().trim()
 
+            // בדיקה אם כל השדות מלאים
             if (!isInputValid(userName, userEmail, userPassword)) {
-                Toast.makeText(
-                    requireContext(),
-                    "Please fill in all the fields",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Please fill in all the fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
+            // בדיקה אם האימייל תקין
             if (!android.util.Patterns.EMAIL_ADDRESS.matcher(userEmail).matches()) {
                 Toast.makeText(requireContext(), "Invalid email address", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val user = User(userName = userName, email = userEmail, password = userPassword)
-
-            // Save the user in the database
+            // בדיקה אם המשתמש כבר קיים בבסיס הנתונים
             lifecycleScope.launch {
                 val userDao = AppDatabase.getDatabase(requireContext()).userDao()
                 val existingUser = userDao.getUserByName(userName)
-                if (existingUser != null) {
-                    Toast.makeText(
-                        requireContext(),
-                        "User already exists.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    val user = User(userName = userName, email = userEmail, password = userPassword)
-                    try {
-                        val userId = userDao.insertUser(user)
-                        val userBundle = Bundle().apply {
-                            putLong("userId", userId)
-                        }
-                        findNavController().navigate(
-                            R.id.action_signUpFragment_to_secondSignUpFragment,
-                            userBundle
-                        )
-                    } catch (e: Exception) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Failed to save user. Please try again.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
 
+                if (existingUser != null) {
+                    // אם המשתמש קיים כבר בבסיס הנתונים
+                    Toast.makeText(requireContext(), "User already exists.", Toast.LENGTH_SHORT).show()
+                } else {
+                    // יצירת Bundle עם המידע של המשתמש
+                    val userBundle = Bundle().apply {
+                        putString("userName", userName)
+                        putString("userEmail", userEmail)
+                        putString("userPassword", userPassword)
+                    }
+
+                    // מעבר למסך הרשמה לעסק
+                    findNavController().navigate(R.id.action_signUpFragment_to_secondSignUpFragment, userBundle)
+                }
             }
         }
 
