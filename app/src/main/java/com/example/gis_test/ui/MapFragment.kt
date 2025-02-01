@@ -42,7 +42,6 @@ class MapFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = MapviewBinding.inflate(inflater, container, false)
-
         setupWebView()
         return binding.root
     }
@@ -110,26 +109,34 @@ class MapFragment : Fragment() {
                     db.businessDao().getAllBusinesses()
                 }
 
+                // Debug log to check businesses
+                Log.d("MapFragment", "Number of businesses: ${businesses.size}")
+                businesses.forEach { business ->
+                    Log.d("MapFragment", "Business: ${business.name}, Address: ${business.street} ${business.streetNumber}")
+                }
+
                 val businessesJson = businesses.map { business ->
                     """{
                         "id": ${business.businessId},
                         "name": "${business.name.replace("\"", "\\\"")}",
                         "address": "${business.street} ${business.streetNumber}, Tel Aviv, Israel",
-                        "category": "${business.category}"
+                        "category": "${business.category}",
+                        "latitude": ${business.latitude ?: "null"},
+                        "longitude": ${business.longitude ?: "null"}
                     }"""
                 }.joinToString(",", "[", "]")
 
+                // Debug log to check JSON
+                Log.d("MapFragment", "Businesses JSON: $businessesJson")
+
                 val script = "loadBusinesses($businessesJson, ${focusBusinessId});"
-                binding.mapWebView.evaluateJavascript(script, null)
+                binding.mapWebView.evaluateJavascript(script) { result ->
+                    Log.d("MapFragment", "Script evaluation result: $result")
+                }
             } catch (e: Exception) {
                 Log.e("MapFragment", "Error loading businesses", e)
             }
         }
-    }
-
-    fun focusBusiness(business: Business) {
-        focusBusinessId = business.businessId
-        loadBusinesses()
     }
 
     @JavascriptInterface
@@ -147,6 +154,19 @@ class MapFragment : Fragment() {
         Log.e("MapFragment", "Search error: $error")
         activity?.runOnUiThread {
             Toast.makeText(requireContext(), "Error finding location: $error", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    @JavascriptInterface
+    fun saveBusinessCoordinates(businessId: Long, latitude: Double, longitude: Double) {
+        lifecycleScope.launch {
+            try {
+                val businessDao = AppDatabase.getDatabase(requireContext()).businessDao()
+                businessDao.updateBusinessCoordinates(businessId, latitude, longitude)
+                Log.d("MapFragment", "Saved coordinates for business $businessId: $latitude, $longitude")
+            } catch (e: Exception) {
+                Log.e("MapFragment", "Error saving coordinates for business $businessId", e)
+            }
         }
     }
 

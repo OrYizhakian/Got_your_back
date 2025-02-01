@@ -25,5 +25,7 @@ data class Business(
     val streetNumber: String,
     val openingHours: String,
     val closingHours: String,
-    val description: String?
+    val description: String?,
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )

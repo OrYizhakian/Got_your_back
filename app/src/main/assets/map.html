@@ -169,7 +169,6 @@
         'Jewelry store': 'fa-gem'
     };
 
-    // Create custom icon for each category
     function createCustomIcon(category) {
         const iconClass = categoryIcons[category] || 'fa-store';
         return L.divIcon({
@@ -211,6 +210,113 @@
         }
     }
 
+    async function loadBusinesses(businesses, focusBusinessId) {
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.className = 'loading-overlay';
+        loadingOverlay.innerHTML = '<div class="loading-spinner"></div>';
+        document.getElementById('map-wrapper').appendChild(loadingOverlay);
+
+        allBusinesses = businesses;
+        markers.forEach(marker => map.removeLayer(marker.marker));
+        markers.clear();
+
+        try {
+            const businessesToGeocode = [];
+            const readyToDisplay = [];
+
+            // Separate businesses that need geocoding from those with coordinates
+            businesses.forEach(business => {
+                if (business.latitude && business.longitude) {
+                    readyToDisplay.push({
+                        business,
+                        coordinates: { lat: business.latitude, lon: business.longitude }
+                    });
+                } else {
+                    businessesToGeocode.push(business);
+                }
+            });
+
+            // Display businesses with known coordinates immediately
+            readyToDisplay.forEach(({ business, coordinates }) => {
+                addMarkerToMap(business, coordinates, focusBusinessId);
+            });
+
+            // Geocode remaining businesses if any
+            if (businessesToGeocode.length > 0) {
+                const geocodingPromises = businessesToGeocode.map(async (business) => {
+                    try {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        const response = await fetch(
+                            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(business.address)}&limit=1`
+                        );
+                        const data = await response.json();
+
+                        if (data && data.length > 0) {
+                            const { lat, lon } = data[0];
+                            // Save coordinates to database through Android interface
+                            if (window.Android && window.Android.saveBusinessCoordinates) {
+                                window.Android.saveBusinessCoordinates(
+                                    business.id,
+                                    parseFloat(lat),
+                                    parseFloat(lon)
+                                );
+                            }
+                            return {
+                                business,
+                                coordinates: { lat: parseFloat(lat), lon: parseFloat(lon) }
+                            };
+                        }
+                        return null;
+                    } catch (error) {
+                        console.error(`Error geocoding business ${business.id}:`, error);
+                        return null;
+                    }
+                });
+
+                const geocodedResults = await Promise.all(geocodingPromises);
+                geocodedResults.forEach(result => {
+                    if (result) {
+                        addMarkerToMap(result.business, result.coordinates, focusBusinessId);
+                    }
+                });
+            }
+
+            // Fit bounds if no focus business
+            if (!focusBusinessId && markers.size > 0) {
+                const bounds = L.latLngBounds(
+                    Array.from(markers.values()).map(m => [m.lat, m.lon])
+                );
+                map.fitBounds(bounds);
+            }
+        } catch (error) {
+            console.error('Error loading businesses:', error);
+        } finally {
+            loadingOverlay.remove();
+        }
+    }
+
+    function addMarkerToMap(business, coordinates, focusBusinessId) {
+        const customIcon = createCustomIcon(business.category);
+        const marker = L.marker([coordinates.lat, coordinates.lon], { icon: customIcon })
+            .bindPopup(`
+                <b>${business.name}</b><br>
+                ${business.category}<br>
+                ${business.address}
+            `)
+            .addTo(map);
+
+        markers.set(business.id, {
+            marker,
+            lat: coordinates.lat,
+            lon: coordinates.lon
+        });
+
+        if (business.id === focusBusinessId) {
+            map.setView([coordinates.lat, coordinates.lon], 17);
+            marker.openPopup();
+        }
+    }
+
     function toggleFilterMenu() {
         document.getElementById('filterMenu').classList.toggle('show');
     }
@@ -222,93 +328,6 @@
         });
         document.getElementById('selectAll').textContent = allSelected ? 'Unselect All' : 'Select All';
         filterMarkers();
-    }
-
-    async function loadBusinesses(businesses, focusBusinessId) {
-        // Show loading overlay
-        const loadingOverlay = document.createElement('div');
-        loadingOverlay.className = 'loading-overlay';
-        loadingOverlay.innerHTML = '<div class="loading-spinner"></div>';
-        document.getElementById('map-wrapper').appendChild(loadingOverlay);
-
-        allBusinesses = businesses;
-        markers.forEach(marker => map.removeLayer(marker.marker));
-        markers.clear();
-
-        try {
-            // Create an array of promises for all geocoding requests
-            const geocodingPromises = businesses.map(async (business) => {
-                try {
-                    // Add a small delay between requests to avoid rate limiting
-                    await new Promise(resolve => setTimeout(resolve, 100));
-
-                    const response = await fetch(
-                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(business.address)}&limit=1`
-                    );
-                    const data = await response.json();
-
-                    if (data && data.length > 0) {
-                        const { lat, lon } = data[0];
-                        return {
-                            business,
-                            coordinates: { lat: parseFloat(lat), lon: parseFloat(lon) }
-                        };
-                    }
-                    return null;
-                } catch (error) {
-                    console.error(`Error geocoding business ${business.id}:`, error);
-                    if (window.Android && window.Android.onSearchError) {
-                        window.Android.onSearchError('Error finding location for ' + business.name);
-                    }
-                    return null;
-                }
-            });
-
-            // Wait for all geocoding requests to complete
-            const results = await Promise.all(geocodingPromises);
-
-            // Add all markers to the map at once
-            results.forEach(result => {
-                if (result) {
-                    const { business, coordinates } = result;
-                    const customIcon = createCustomIcon(business.category);
-                    const marker = L.marker([coordinates.lat, coordinates.lon], { icon: customIcon })
-                        .bindPopup(`
-                            <b>${business.name}</b><br>
-                            ${business.category}<br>
-                            ${business.address}
-                        `)
-                        .addTo(map);
-
-                    markers.set(business.id, {
-                        marker,
-                        lat: coordinates.lat,
-                        lon: coordinates.lon
-                    });
-
-                    if (business.id === focusBusinessId) {
-                        map.setView([coordinates.lat, coordinates.lon], 17);
-                        marker.openPopup();
-                    }
-                }
-            });
-
-            // Fit bounds if no focus business
-            if (!focusBusinessId && markers.size > 0) {
-                const bounds = L.latLngBounds(
-                    Array.from(markers.values()).map(m => [m.lat, m.lon])
-                );
-                map.fitBounds(bounds);
-            }
-        } catch (error) {
-            console.error('Error loading businesses:', error);
-            if (window.Android && window.Android.onSearchError) {
-                window.Android.onSearchError('Error loading businesses: ' + error.message);
-            }
-        } finally {
-            // Remove loading overlay
-            loadingOverlay.remove();
-        }
     }
 
     function filterMarkers() {

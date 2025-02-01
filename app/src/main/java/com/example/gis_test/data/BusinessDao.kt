@@ -21,4 +21,7 @@ interface BusinessDao {
 
     @Query("SELECT * FROM businesses")
     suspend fun getAllBusinesses(): List<Business>
+
+    @Query("UPDATE businesses SET latitude = :latitude, longitude = :longitude WHERE businessId = :businessId")
+    suspend fun updateBusinessCoordinates(businessId: Long, latitude: Double, longitude: Double)
 }
