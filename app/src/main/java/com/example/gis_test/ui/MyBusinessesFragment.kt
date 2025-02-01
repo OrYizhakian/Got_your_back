@@ -29,6 +29,7 @@ class MyBusinessesFragment : Fragment() {
 
         adapter = BusinessAdapter(
             onShortClick = { business ->
+                // Navigate to business details/edit screen
                 val bundle = Bundle().apply {
                     putLong("businessId", business.businessId)
                 }
@@ -38,17 +39,15 @@ class MyBusinessesFragment : Fragment() {
                 )
             },
             onLongPress = { business ->
+                // Navigate to map and focus on the selected business
                 val bundle = Bundle().apply {
                     putLong("userId", arguments?.getLong("userId") ?: -1L)
+                    putLong("focusBusinessId", business.businessId)
                 }
-                findNavController().navigate(R.id.action_myBusinessesFragment_to_mapFragment2, bundle).also {
-                    parentFragmentManager.findFragmentById(R.id.nav_host_fragment)
-                        ?.childFragmentManager
-                        ?.fragments
-                        ?.filterIsInstance<MapFragment>()
-                        ?.firstOrNull()
-                        ?.focusBusiness(business)
-                }
+                findNavController().navigate(
+                    R.id.action_myBusinessesFragment_to_mapFragment2,
+                    bundle
+                )
             }
         )
 

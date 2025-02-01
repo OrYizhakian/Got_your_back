@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 class MapFragment : Fragment() {
     private var _binding: MapviewBinding? = null
     private val binding get() = _binding!!
-    private var businessToFocus: Business? = null
+    private var focusBusinessId: Long? = null
     private var userId: Long? = null
 
     @JavascriptInterface
@@ -32,6 +32,7 @@ class MapFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         userId = arguments?.getLong("userId")
+        focusBusinessId = arguments?.getLong("focusBusinessId")
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -42,6 +43,11 @@ class MapFragment : Fragment() {
     ): View {
         _binding = MapviewBinding.inflate(inflater, container, false)
 
+        setupWebView()
+        return binding.root
+    }
+
+    private fun setupWebView() {
         binding.mapWebView.apply {
             settings.apply {
                 javaScriptEnabled = true
@@ -92,7 +98,6 @@ class MapFragment : Fragment() {
         }
 
         binding.mapWebView.loadUrl("file:///android_asset/map.html")
-        return binding.root
     }
 
     private fun loadBusinesses() {
@@ -114,7 +119,7 @@ class MapFragment : Fragment() {
                     }"""
                 }.joinToString(",", "[", "]")
 
-                val script = "loadBusinesses($businessesJson, ${businessToFocus?.businessId ?: "null"});"
+                val script = "loadBusinesses($businessesJson, ${focusBusinessId});"
                 binding.mapWebView.evaluateJavascript(script, null)
             } catch (e: Exception) {
                 Log.e("MapFragment", "Error loading businesses", e)
@@ -123,7 +128,7 @@ class MapFragment : Fragment() {
     }
 
     fun focusBusiness(business: Business) {
-        businessToFocus = business
+        focusBusinessId = business.businessId
         loadBusinesses()
     }
 
@@ -147,6 +152,14 @@ class MapFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.mapWebView.apply {
+            clearCache(true)
+            clearHistory()
+            loadUrl("about:blank")
+            onPause()
+            removeAllViews()
+            destroy()
+        }
         _binding = null
     }
 }
