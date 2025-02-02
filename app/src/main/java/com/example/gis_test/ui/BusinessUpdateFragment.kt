@@ -11,10 +11,10 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.example.gis_test.R
+import com.example.GotYourBack.databinding.BusinessEditPageBinding
+import com.example.GotYourBack.R
 import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.data.Business
-import com.example.gis_test.databinding.BusinessEditPageBinding
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader

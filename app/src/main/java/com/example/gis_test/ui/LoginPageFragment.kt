@@ -9,8 +9,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.gis_test.data.AppDatabase
-import com.example.gis_test.R
-import com.example.gis_test.databinding.LoginPageBinding
+import com.example.GotYourBack.R
+import com.example.GotYourBack.databinding.LoginPageBinding
 import kotlinx.coroutines.launch
 
 class LoginPageFragment : Fragment() {

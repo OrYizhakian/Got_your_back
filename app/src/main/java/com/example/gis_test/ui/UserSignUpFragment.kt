@@ -8,10 +8,10 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.example.gis_test.R
+import com.example.GotYourBack.R
 import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.data.User
-import com.example.gis_test.databinding.SignupPageBinding
+import com.example.GotYourBack.databinding.SignupPageBinding
 import kotlinx.coroutines.launch
 
 class UserSignUpFragment : Fragment() {

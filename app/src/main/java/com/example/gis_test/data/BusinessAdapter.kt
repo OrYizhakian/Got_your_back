@@ -5,8 +5,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.GotYourBack.databinding.BusinessItemBinding
 import com.example.gis_test.data.Business
-import com.example.gis_test.databinding.BusinessItemBinding
 
 class BusinessAdapter(
     private val onShortClick: (Business) -> Unit,

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.gis_test"
+    namespace = "com.example.GotYourBack"
     compileSdk = 35
 
     buildFeatures {
@@ -14,7 +14,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.gis_test"
+        applicationId = "com.example.GotYourBack"
         minSdk = 29
         targetSdk = 35
         versionCode = 1
@@ -43,6 +43,7 @@ android {
 }
 
 dependencies {
+    //implementation(libs.firebase.firestore)
     val roomVersion = "2.6.1"
 
     // Room database
@@ -54,6 +55,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.database) // Realtime Database
     implementation(libs.google.firebase.firestore.ktx) // Firestore
+    implementation ("com.google.firebase:firebase-auth:23.1.0")
+
 
     // Core libraries
     implementation(libs.androidx.core.ktx)

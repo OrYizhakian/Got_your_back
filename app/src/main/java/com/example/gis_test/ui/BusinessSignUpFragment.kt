@@ -1,5 +1,6 @@
 package com.example.gis_test.ui
 
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -11,11 +12,17 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.example.gis_test.R
+import com.example.GotYourBack.R
+import com.example.GotYourBack.databinding.BusinessSignupPageBinding
 import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.data.Business
 import com.example.gis_test.data.User
-import com.example.gis_test.databinding.BusinessSignupPageBinding
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.auth.FirebaseAuthCredentialsProvider
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,6 +49,10 @@ class SecondSignUpFragment : Fragment() {
     private lateinit var categories: Array<String>
     private lateinit var hours: Array<String>
     private lateinit var minutes: Array<String>
+    val db = Firebase.firestore
+
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -166,6 +177,38 @@ class SecondSignUpFragment : Fragment() {
 
                 Toast.makeText(requireContext(), "Business saved successfully!", Toast.LENGTH_SHORT).show()
 
+
+
+                val auth = FirebaseAuth.getInstance()
+
+                auth.createUserWithEmailAndPassword(userEmail, userPassword)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            // שמור את המידע במסד הנתונים (כגון Firestore או Realtime Database)
+                            val userMap = hashMapOf(
+                                "uName" to userName,
+                                "email" to userEmail,
+                                "password" to userPassword
+                            )
+
+                            FirebaseFirestore.getInstance()
+                                .collection("users")
+                                .document(task.result?.user?.uid!!)
+                                .set(userMap)
+                                .addOnSuccessListener {
+                                    println("User registered successfully")
+                                }
+                                .addOnFailureListener { e ->
+                                    println("Failed to save user: ${e.message}")
+                                }
+                        } else {
+                            println("Registration failed: ${task.exception?.message}")
+                        }
+                    }
+
+
+
+
                 // מעבר למסך הבא
                 findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
 
@@ -175,6 +218,7 @@ class SecondSignUpFragment : Fragment() {
                 Log.e("SecondSignUpFragment", "Error saving business", e)
             }
         }
+
     }
 
 

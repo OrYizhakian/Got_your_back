@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.data.Business
-import com.example.gis_test.databinding.MapviewBinding
+import com.example.GotYourBack.databinding.MapviewBinding
 import kotlinx.coroutines.launch
 
 class MapFragment : Fragment() {

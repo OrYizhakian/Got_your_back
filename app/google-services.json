@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "811319047480",
-    "project_id": "gis-test-74a5c",
-    "storage_bucket": "gis-test-74a5c.firebasestorage.app"
+    "project_number": "593052477461",
+    "project_id": "got-your-back-2025",
+    "storage_bucket": "got-your-back-2025.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:811319047480:android:a909996e164d715fd67dcd",
+        "mobilesdk_app_id": "1:593052477461:android:0ec6f06b484b5978c0c61c",
         "android_client_info": {
-          "package_name": "com.example.gis_test"
+          "package_name": "com.example.GotYourBack"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBSnIt2v4ZD7M4wt4BKGtRcB0PEd_2HTzo"
+          "current_key": "AIzaSyCt8C1ZmvasboTYiwlG7whdvWuQiyy0QOo"
         }
       ],
       "services": {

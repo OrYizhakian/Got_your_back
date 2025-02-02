@@ -9,9 +9,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.gis_test.R
+import com.example.GotYourBack.R
 import com.example.gis_test.data.AppDatabase
-import com.example.gis_test.databinding.MyBusinessScreenBinding
+import com.example.GotYourBack.databinding.MyBusinessScreenBinding
 import kotlinx.coroutines.launch
 
 class MyBusinessesFragment : Fragment() {

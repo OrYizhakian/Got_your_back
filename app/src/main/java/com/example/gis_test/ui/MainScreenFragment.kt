@@ -6,8 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.example.gis_test.R
-import com.example.gis_test.databinding.MainScreenPageBinding
+import com.example.GotYourBack.R
+import com.example.GotYourBack.databinding.MainScreenPageBinding
 
 class MainScreenFragment: Fragment() {
     private var _binding: MainScreenPageBinding?= null

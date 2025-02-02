@@ -13,11 +13,19 @@
         <action
             android:id="@+id/action_mainScreenFragment_to_loginPageFragment"
             app:destination="@id/loginPageFragment"
+            app:enterAnim="@anim/from_right"
+            app:exitAnim="@anim/to_left"
+            app:popEnterAnim="@anim/from_left"
+            app:popExitAnim="@anim/to_right"
             app:popUpTo="@id/loginPageFragment"
             app:popUpToInclusive="true" />
         <action
             android:id="@+id/action_mainScreenFragment_to_mapFragment2"
-            app:destination="@id/mapFragment2" />
+            app:destination="@id/mapFragment2"
+            app:enterAnim="@anim/from_left"
+            app:exitAnim="@anim/to_right"
+            app:popEnterAnim="@anim/from_right"
+            app:popExitAnim="@anim/to_left" />
     </fragment>
 
     <fragment
@@ -27,7 +35,11 @@
         tools:layout="@layout/login_page" >
         <action
             android:id="@+id/action_loginPageFragment_to_signUpFragment"
-            app:destination="@id/signUpFragment" />
+            app:destination="@id/signUpFragment"
+            app:enterAnim="@anim/from_bottom"
+            app:exitAnim="@anim/to_top"
+            app:popEnterAnim="@anim/from_top"
+            app:popExitAnim="@anim/to_bottom" />
         <action
             android:id="@+id/action_loginPageFragment_to_myBusinessesFragment"
             app:destination="@id/myBusinessesFragment" />
@@ -40,7 +52,11 @@
         tools:layout="@layout/signup_page" >
         <action
             android:id="@+id/action_signUpFragment_to_secondSignUpFragment"
-            app:destination="@id/secondSignUpFragment" />
+            app:destination="@id/secondSignUpFragment"
+            app:enterAnim="@anim/from_right"
+            app:exitAnim="@anim/to_left"
+            app:popEnterAnim="@anim/from_left"
+            app:popExitAnim="@anim/to_right" />
     </fragment>
 
     <fragment
@@ -51,8 +67,10 @@
         <action
             android:id="@+id/action_secondSignUpFragment_to_loginPageFragment"
             app:destination="@id/loginPageFragment"
-            app:popUpTo="@id/signUpFragment"
-            app:popUpToInclusive="true" />
+            app:enterAnim="@anim/to_top"
+            app:exitAnim="@anim/from_bottom"
+            app:popUpTo="@id/mainScreenFragment"
+            app:popUpToInclusive="false" />
     </fragment>
 
     <fragment
