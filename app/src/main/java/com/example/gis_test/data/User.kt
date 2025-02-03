@@ -8,5 +8,6 @@ data class User(
     @PrimaryKey(autoGenerate = true) val userId: Long = 0,
     val userName: String,
     val email: String,
-    val password: String
+    val password: String,
+    val fireBaseId:String
 )

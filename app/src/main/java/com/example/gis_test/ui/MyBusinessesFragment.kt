@@ -12,6 +12,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.GotYourBack.R
 import com.example.gis_test.data.AppDatabase
 import com.example.GotYourBack.databinding.MyBusinessScreenBinding
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
 class MyBusinessesFragment : Fragment() {
@@ -19,7 +22,7 @@ class MyBusinessesFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var adapter: BusinessAdapter
-
+    private lateinit var database: DatabaseReference
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -71,8 +74,8 @@ class MyBusinessesFragment : Fragment() {
             }
         }
 
-        binding.mrsBackButton.setOnClickListener {
-            requireActivity().onBackPressed()
+        binding.backButton.setOnClickListener {
+            requireActivity().onBackPressedDispatcher
         }
 
         return binding.root
@@ -81,25 +84,30 @@ class MyBusinessesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val userId = arguments?.getLong("userId") ?: -1L
-        if (userId == -1L) {
-            Log.e("MyBusinessesFragment", "User ID missing")
-            binding.businessListEmptyMessage.text = "Error: User ID is missing."
-            binding.businessListEmptyMessage.visibility = View.VISIBLE
-            return
-        }
+        val userId = arguments?.get("userId")
+        when (userId) {
+            is Long ->{
 
-        lifecycleScope.launch {
-            val businesses = AppDatabase.getDatabase(requireContext())
-                .businessDao()
-                .getBusinessesByUserId(userId)
+                lifecycleScope . launch {
+                    val businesses = AppDatabase.getDatabase(requireContext())
+                        .businessDao()
+                        .getBusinessesByUserId(userId)
 
-            if (businesses.isNotEmpty()) {
-                binding.businessListEmptyMessage.visibility = View.GONE
-                adapter.submitList(businesses)
-            } else {
-                binding.businessListEmptyMessage.text = "No businesses found for this user."
-                binding.businessListEmptyMessage.visibility = View.VISIBLE
+                    if (businesses.isNotEmpty()) {
+                        binding.businessListEmptyMessage.visibility = View.GONE
+                        adapter.submitList(businesses)
+                    } else {
+                        binding.businessListEmptyMessage.text = "No businesses found for this user."
+                        binding.businessListEmptyMessage.visibility = View.VISIBLE
+                    }
+                }
+            }
+            is String ->{
+                database = Firebase.database.reference
+
+                database.child("businesses").child("userId").get().addOnSuccessListener {
+                    //יש פה יוזר איי די של פיירבייס, אנחנו צריכים לגשת לכל העסקים שבפיירבייס עם היוזר איי די הזה
+                }
             }
         }
     }

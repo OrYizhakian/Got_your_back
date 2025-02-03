@@ -1,6 +1,8 @@
 package com.example.gis_test.ui
 
+import android.content.ContentValues.TAG
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +13,9 @@ import androidx.navigation.fragment.findNavController
 import com.example.gis_test.data.AppDatabase
 import com.example.GotYourBack.R
 import com.example.GotYourBack.databinding.LoginPageBinding
+import com.example.gis_test.data.User
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class LoginPageFragment : Fragment() {
@@ -25,17 +30,23 @@ class LoginPageFragment : Fragment() {
         _binding = LoginPageBinding.inflate(inflater, container, false)
 
         binding.loginBtn.setOnClickListener {
-            val username = binding.usernameEdt.text.toString().trim()
+            //val username = binding.usernameEdt.text.toString().trim()
             val password = binding.passwordEdt.text.toString().trim()
+            val userEmail = binding.emailEdt.text.toString().trim()
+            val auth = FirebaseAuth.getInstance()
+            val userNameRoom = arguments?.getString("userName", "") ?: ""
+            val userEmailRoom = arguments?.getString("userEmail", "") ?: ""
+            val userPasswordRoom = arguments?.getString("userPassword", "") ?: ""
 
-            if (username.isBlank() || password.isBlank()) {
+
+            if (userEmail.isBlank() || password.isBlank()) {
                 Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             // Check if user exists
             lifecycleScope.launch {
-                val userId = checkUserCredentials(username, password)
+                val userId = checkUserCredentials(userEmail, password)
                 if (userId != null) {
                     // User exists, navigate to MyBusinessesFragment
                     val args = Bundle().apply {
@@ -46,6 +57,35 @@ class LoginPageFragment : Fragment() {
                         args
                     )
                 } else {
+                    auth.signInWithEmailAndPassword(userEmail, password)
+                        .addOnCompleteListener{task ->
+                            if (task.isSuccessful) {
+                                // Sign in success, update UI with the signed-in user's information
+                                Log.d(TAG, "signInWithEmail:success")
+                                val user = auth.currentUser?.uid
+                                val args = Bundle().apply {
+                                    putString("userId",user)
+                                }
+                                lifecycleScope.launch(Dispatchers.IO) {
+                                    val userDao = AppDatabase.getDatabase(requireContext()).userDao()
+                                     userDao.insertUser(
+                                        User(userName = userNameRoom, email = userEmailRoom, password = userPasswordRoom, fireBaseId = user!!)
+                                    )
+                                    }
+                                findNavController().navigate(
+                                    R.id.action_loginPageFragment_to_myBusinessesFragment,
+                                    args
+                                )
+                            } else {
+                                // If sign in fails, display a message to the user.
+                                Log.w(TAG, "signInWithEmail:failure", task.exception)
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Authentication failed.",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            }
+                        }
                     // User does not exist, show error
                     Toast.makeText(requireContext(), "Invalid username or password", Toast.LENGTH_SHORT).show()
                 }

@@ -1,6 +1,5 @@
 package com.example.gis_test.ui
 
-import android.content.ContentValues.TAG
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -17,15 +16,10 @@ import com.example.GotYourBack.databinding.BusinessSignupPageBinding
 import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.data.Business
 import com.example.gis_test.data.User
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.auth.FirebaseAuthCredentialsProvider
-import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -49,7 +43,6 @@ class SecondSignUpFragment : Fragment() {
     private lateinit var categories: Array<String>
     private lateinit var hours: Array<String>
     private lateinit var minutes: Array<String>
-    val db = Firebase.firestore
 
 
 
@@ -128,63 +121,30 @@ class SecondSignUpFragment : Fragment() {
         val businessStreetNumber = binding.streetnumberEdt.text.toString().trim()
         val businessStreet = binding.streetNameEdt.text.toString().trim()
         val businessCategory = categories[binding.categoryPicker.value]
-        val openingHours =
-            "${hours[binding.openHourPicker.value]}:${minutes[binding.openMinutePicker.value]}"
-        val closingHours =
-            "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}"
+        val openingHours = "${hours[binding.openHourPicker.value]}:${minutes[binding.openMinutePicker.value]}"
+        val closingHours = "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}"
         val businessDescription = binding.businessDescEdt.text.toString().trim()
 
         if (!isInputValid(businessName, businessStreet, businessStreetNumber)) {
-            Toast.makeText(requireContext(), "Please fill in all the fields", Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(requireContext(), "Please fill in all the fields", Toast.LENGTH_SHORT).show()
             return
         }
 
         lifecycleScope.launch {
             try {
-                // תחילת הפעולה בקורוטינה
-
-                // הוספת משתמש
                 val userName = arguments?.getString("userName", "") ?: ""
                 val userEmail = arguments?.getString("userEmail", "") ?: ""
                 val userPassword = arguments?.getString("userPassword", "") ?: ""
-
-                val user = User(
-                    userName = userName,
-                    email = userEmail,
-                    password = userPassword
-                )
-
-                // הוספת המשתמש למסד הנתונים
-                val userDao = AppDatabase.getDatabase(requireContext()).userDao()
-                val userId = userDao.insertUser(user)
-
-                // הוספת עסק
-                val business = Business(
-                    userId = userId,
-                    businessId = 0L, // ID של העסק אם הוא נוצר אוטומטית
-                    name = businessName,
-                    category = businessCategory,
-                    street = businessStreet,
-                    streetNumber = businessStreetNumber,
-                    openingHours = openingHours,
-                    closingHours = closingHours,
-                    description = businessDescription
-                )
-
-                val businessDao = AppDatabase.getDatabase(requireContext()).businessDao()
-                businessDao.insertBusiness(business)
-
-                Toast.makeText(requireContext(), "Business saved successfully!", Toast.LENGTH_SHORT).show()
-
-
 
                 val auth = FirebaseAuth.getInstance()
 
                 auth.createUserWithEmailAndPassword(userEmail, userPassword)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            // שמור את המידע במסד הנתונים (כגון Firestore או Realtime Database)
+                            val userId = task.result?.user?.uid ?: return@addOnCompleteListener
+
+
+                            // ✅ Save user to Firebase Firestore
                             val userMap = hashMapOf(
                                 "uName" to userName,
                                 "email" to userEmail,
@@ -193,10 +153,56 @@ class SecondSignUpFragment : Fragment() {
 
                             FirebaseFirestore.getInstance()
                                 .collection("users")
-                                .document(task.result?.user?.uid!!)
+                                .document(userId)
                                 .set(userMap)
                                 .addOnSuccessListener {
                                     println("User registered successfully")
+
+                                    // ✅ Save Business to Firestore
+                                    val businessMap = hashMapOf(
+                                        "userId" to userId, // Link business to user
+                                        "name" to businessName,
+                                        "category" to businessCategory,
+                                        "street" to businessStreet,
+                                        "streetNumber" to businessStreetNumber,
+                                        "openingHours" to openingHours,
+                                        "closingHours" to closingHours,
+                                        "description" to businessDescription
+                                    )
+
+                                    FirebaseFirestore.getInstance()
+                                        .collection("businesses")
+                                        .add(businessMap)
+                                        .addOnSuccessListener {
+                                            println("Business saved successfully")
+                                            // ✅ Save user to Room Database
+                                            lifecycleScope.launch(Dispatchers.IO) {
+                                                val userDao = AppDatabase.getDatabase(requireContext()).userDao()
+                                                val localUserId = userDao.insertUser(
+                                                    User(userName = userName, email = userEmail, password = userPassword, fireBaseId = userId)
+                                                )
+
+                                                // ✅ Save business to Room Database
+                                                val businessDao = AppDatabase.getDatabase(requireContext()).businessDao()
+                                                val localBusiness = Business(
+                                                    userId = localUserId, // Local DB user ID
+                                                    businessId = 0L, // Auto-increment
+                                                    name = businessName,
+                                                    category = businessCategory,
+                                                    street = businessStreet,
+                                                    streetNumber = businessStreetNumber,
+                                                    openingHours = openingHours,
+                                                    closingHours = closingHours,
+                                                    description = businessDescription
+                                                )
+                                                businessDao.insertBusiness(localBusiness)
+                                            }
+                                            // Navigate only after everything is saved
+                                            findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
+                                        }
+                                        .addOnFailureListener { e ->
+                                            println("Failed to save business: ${e.message}")
+                                        }
                                 }
                                 .addOnFailureListener { e ->
                                     println("Failed to save user: ${e.message}")
@@ -205,20 +211,11 @@ class SecondSignUpFragment : Fragment() {
                             println("Registration failed: ${task.exception?.message}")
                         }
                     }
-
-
-
-
-                // מעבר למסך הבא
-                findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
-
             } catch (e: Exception) {
-                // אם יש שגיאה בשמירה
                 Toast.makeText(requireContext(), "Failed to update business.", Toast.LENGTH_SHORT).show()
                 Log.e("SecondSignUpFragment", "Error saving business", e)
             }
         }
-
     }
 
 
