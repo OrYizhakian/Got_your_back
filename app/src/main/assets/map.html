@@ -69,20 +69,7 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        .custom-icon {
-            background: white;
-            border-radius: 50%;
-            padding: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            text-align: center;
-            line-height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .custom-icon i {
-            font-size: 20px;
-        }
+
         .loading-overlay {
             position: absolute;
             top: 0;
@@ -169,16 +156,61 @@
         'Jewelry store': 'fa-gem'
     };
 
+    const categoryColors = {
+        'Restaurant': '#e74c3c',
+        'Coffee place': '#8b4513',
+        'Beauty saloon': '#ff69b4',
+        'Grocery store': '#2ecc71',
+        'Clothes store': '#9b59b6',
+        'Book store': '#3498db',
+        'Gym': '#f39c12',
+        'Pharmacy': '#1abc9c',
+        'Hardware store': '#7f8c8d',
+        'Jewelry store': '#f1c40f'
+    };
+
     function createCustomIcon(category) {
-        const iconClass = categoryIcons[category] || 'fa-store';
-        return L.divIcon({
-            html: `<i class="fa-solid ${iconClass}" style="color: #2b2b2b;"></i>`,
-            className: 'custom-icon',
-            iconSize: [40, 40],
-            iconAnchor: [20, 20],
-            popupAnchor: [0, -15]
-        });
-    }
+    const iconClass = categoryIcons[category] || 'fa-store';
+    const color = categoryColors[category] || '#3388ff';
+
+    return L.divIcon({
+        html: `
+            <div style="
+                width: 30px;
+                height: 42px;
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <div style="
+                    width: 30px;
+                    height: 30px;
+                    background: ${color};
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    position: absolute;
+                    top: 5px;
+                    left: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                ">
+                    <i class="fa-solid ${iconClass}" style="
+                        transform: rotate(45deg);
+                        font-size: 14px;
+                        color: white;
+                    "></i>
+                </div>
+            </div>
+        `,
+        className: 'custom-icon',
+        iconSize: [30, 42],
+        iconAnchor: [15, 42],
+        popupAnchor: [0, -42]
+    });
+}
 
     function initMap() {
         console.log('Initializing map...');
@@ -224,7 +256,6 @@
             const businessesToGeocode = [];
             const readyToDisplay = [];
 
-            // Separate businesses that need geocoding from those with coordinates
             businesses.forEach(business => {
                 if (business.latitude && business.longitude) {
                     readyToDisplay.push({
@@ -236,12 +267,10 @@
                 }
             });
 
-            // Display businesses with known coordinates immediately
             readyToDisplay.forEach(({ business, coordinates }) => {
                 addMarkerToMap(business, coordinates, focusBusinessId);
             });
 
-            // Geocode remaining businesses if any
             if (businessesToGeocode.length > 0) {
                 const geocodingPromises = businessesToGeocode.map(async (business) => {
                     try {
@@ -253,7 +282,6 @@
 
                         if (data && data.length > 0) {
                             const { lat, lon } = data[0];
-                            // Save coordinates to database through Android interface
                             if (window.Android && window.Android.saveBusinessCoordinates) {
                                 window.Android.saveBusinessCoordinates(
                                     business.id,
@@ -281,7 +309,6 @@
                 });
             }
 
-            // Fit bounds if no focus business
             if (!focusBusinessId && markers.size > 0) {
                 const bounds = L.latLngBounds(
                     Array.from(markers.values()).map(m => [m.lat, m.lon])

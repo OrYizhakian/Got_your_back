@@ -17,91 +17,144 @@ import com.example.gis_test.data.User
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LoginPageFragment : Fragment() {
     private var _binding: LoginPageBinding? = null
     private val binding get() = _binding!!
+    private lateinit var auth: FirebaseAuth
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        auth = FirebaseAuth.getInstance()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = LoginPageBinding.inflate(inflater, container, false)
+        setupListeners()
+        return binding.root
+    }
 
+    private fun setupListeners() {
         binding.loginBtn.setOnClickListener {
-            //val username = binding.usernameEdt.text.toString().trim()
-            val password = binding.passwordEdt.text.toString().trim()
-            val userEmail = binding.emailEdt.text.toString().trim()
-            val auth = FirebaseAuth.getInstance()
-            val userNameRoom = arguments?.getString("userName", "") ?: ""
-            val userEmailRoom = arguments?.getString("userEmail", "") ?: ""
-            val userPasswordRoom = arguments?.getString("userPassword", "") ?: ""
-
-
-            if (userEmail.isBlank() || password.isBlank()) {
-                Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            // Check if user exists
-            lifecycleScope.launch {
-                val userId = checkUserCredentials(userEmail, password)
-                if (userId != null) {
-                    // User exists, navigate to MyBusinessesFragment
-                    val args = Bundle().apply {
-                        putLong("userId", userId)
-                    }
-                    findNavController().navigate(
-                        R.id.action_loginPageFragment_to_myBusinessesFragment,
-                        args
-                    )
-                } else {
-                    auth.signInWithEmailAndPassword(userEmail, password)
-                        .addOnCompleteListener{task ->
-                            if (task.isSuccessful) {
-                                // Sign in success, update UI with the signed-in user's information
-                                Log.d(TAG, "signInWithEmail:success")
-                                val user = auth.currentUser?.uid
-                                val args = Bundle().apply {
-                                    putString("userId",user)
-                                }
-                                lifecycleScope.launch(Dispatchers.IO) {
-                                    val userDao = AppDatabase.getDatabase(requireContext()).userDao()
-                                     userDao.insertUser(
-                                        User(userName = userNameRoom, email = userEmailRoom, password = userPasswordRoom, fireBaseId = user!!)
-                                    )
-                                    }
-                                findNavController().navigate(
-                                    R.id.action_loginPageFragment_to_myBusinessesFragment,
-                                    args
-                                )
-                            } else {
-                                // If sign in fails, display a message to the user.
-                                Log.w(TAG, "signInWithEmail:failure", task.exception)
-                                Toast.makeText(
-                                    requireContext(),
-                                    "Authentication failed.",
-                                    Toast.LENGTH_SHORT,
-                                ).show()
-                            }
-                        }
-                    // User does not exist, show error
-                    Toast.makeText(requireContext(), "Invalid username or password", Toast.LENGTH_SHORT).show()
-                }
-            }
+            handleLogin()
         }
 
         binding.signupBtn.setOnClickListener {
             findNavController().navigate(R.id.action_loginPageFragment_to_signUpFragment)
         }
-
-        return binding.root
     }
 
-    private suspend fun checkUserCredentials(username: String, password: String): Long? {
-        val userDao = AppDatabase.getDatabase(requireContext()).userDao()
-        return userDao.getUserIdByCredentials(username, password)
+    private fun handleLogin() {
+        val password = binding.passwordEdt.text.toString().trim()
+        val userEmail = binding.emailEdt.text.toString().trim()
+
+        if (!validateInput(userEmail, password)) {
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                // First try local authentication
+                val localUserId = withContext(Dispatchers.IO) {
+                    AppDatabase.getDatabase(requireContext())
+                        .userDao()
+                        .getUserIdByCredentials(userEmail, password)
+                }
+
+                if (localUserId != null) {
+                    navigateToBusinesses(localUserId)
+                    return@launch
+                }
+
+                // If local auth fails, try Firebase
+                authenticateWithFirebase(userEmail, password)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during login", e)
+                showError("Login failed: ${e.message}")
+            }
+        }
+    }
+
+    private fun validateInput(email: String, password: String): Boolean {
+        if (email.isBlank() || password.isBlank()) {
+            showError("Please fill in all fields")
+            return false
+        }
+        return true
+    }
+
+    private fun authenticateWithFirebase(email: String, password: String) {
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    handleSuccessfulFirebaseAuth(email, password)
+                } else {
+                    Log.w(TAG, "signInWithEmail:failure", task.exception)
+                    showError("Authentication failed")
+                }
+            }
+    }
+
+    private fun handleSuccessfulFirebaseAuth(email: String, password: String) {
+        val firebaseUser = auth.currentUser
+        if (firebaseUser == null) {
+            showError("Failed to get user details")
+            return
+        }
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val userDao = AppDatabase.getDatabase(requireContext()).userDao()
+
+                // Check if user exists in Room
+                var localUser = userDao.getUserByName(email)
+
+                if (localUser == null) {
+                    // Create new user in Room
+                    val userId = userDao.insertUser(
+                        User(
+                            userName = email,
+                            email = email,
+                            password = password,
+                            fireBaseId = firebaseUser.uid
+                        )
+                    )
+                    localUser = userDao.getUserById(userId)
+                }
+
+                withContext(Dispatchers.Main) {
+                    if (localUser != null) {
+                        navigateToBusinesses(localUser.userId)
+                    } else {
+                        showError("Failed to create local user")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error creating local user", e)
+                withContext(Dispatchers.Main) {
+                    showError("Failed to create local user: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun navigateToBusinesses(userId: Long) {
+        val args = Bundle().apply {
+            putLong("userId", userId)
+        }
+        findNavController().navigate(
+            R.id.action_loginPageFragment_to_myBusinessesFragment,
+            args
+        )
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {
