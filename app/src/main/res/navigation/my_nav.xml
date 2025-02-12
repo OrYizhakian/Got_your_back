@@ -61,7 +61,7 @@
 
     <fragment
         android:id="@+id/secondSignUpFragment"
-        android:name="com.example.gis_test.ui.SecondSignUpFragment"
+        android:name="com.example.gis_test.ui.BusinessSignUpFragment"
         android:label="signup_sec_page"
         tools:layout="@layout/business_signup_page" >
         <action

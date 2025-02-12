@@ -36,7 +36,7 @@ fun loadStreetsFromCsv(context: Context): List<String> {
     }
 }
 
-class SecondSignUpFragment : Fragment() {
+class BusinessSignUpFragment : Fragment() {
     private var _binding: BusinessSignupPageBinding? = null
     private val binding get() = _binding!!
 

@@ -5,7 +5,7 @@
     android:padding="16dp"
     android:orientation="vertical"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ui.SecondSignUpFragment"
+    tools:context="com.example.gis_test.ui.BusinessSignUpFragment"
     tools:ignore="ScrollViewCount">
 
 
@@ -201,15 +201,23 @@
             android:layout_height="wrap_content"
             android:text="@string/description"
             android:textSize="18sp" />
-        <EditText
-            android:id="@+id/businessDescEdt"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/textboxbackground"
-            android:padding="12dp"
-            android:hint="@string/describe_your_business"
-            android:textSize="16sp"
-            android:textColor="@color/black" />
+            style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense"
+            android:hint="@string/describe_your_business">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/businessDescEdt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top|start"
+                android:inputType="textMultiLine"
+                android:minHeight="120dp"
+                android:padding="12dp"
+                android:textColor="@color/black"
+                android:textSize="16sp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <!-- כפתור הרשמה -->
         <Button
