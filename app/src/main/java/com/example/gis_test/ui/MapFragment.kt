@@ -14,25 +14,39 @@ import androidx.lifecycle.lifecycleScope
 import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.data.Business
 import com.example.GotYourBack.databinding.MapviewBinding
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 
 class MapFragment : Fragment() {
     private var _binding: MapviewBinding? = null
     private val binding get() = _binding!!
     private var focusBusinessId: Long? = null
     private var userId: Long? = null
+    private var firebaseUserId: String? = null
+    private val firestore = FirebaseFirestore.getInstance()
 
     @JavascriptInterface
     fun onMapReady() {
         activity?.runOnUiThread {
-            loadBusinesses()
+            loadAllBusinesses()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        userId = arguments?.getLong("userId")
-        focusBusinessId = arguments?.getLong("focusBusinessId")
+        arguments?.let { args ->
+            focusBusinessId = args.getLong("focusBusinessId", -1L).takeIf { it != -1L }
+            userId = args.getLong("userId", -1L).takeIf { it != -1L }
+            firebaseUserId = args.getString("firebaseUserId")
+
+            Log.d("MapFragment", "Received arguments: focusBusinessId=$focusBusinessId, " +
+                    "userId=$userId, firebaseUserId=$firebaseUserId")
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -99,42 +113,98 @@ class MapFragment : Fragment() {
         binding.mapWebView.loadUrl("file:///android_asset/map.html")
     }
 
-    private fun loadBusinesses() {
+    private fun loadAllBusinesses() {
         lifecycleScope.launch {
             try {
-                val db = AppDatabase.getDatabase(requireContext())
-                val businesses = if (userId != null) {
-                    db.businessDao().getBusinessesByUserId(userId!!)
-                } else {
-                    db.businessDao().getAllBusinesses()
+                val businesses = mutableListOf<Business>()
+
+                // Load Room businesses
+                val localBusinesses = withContext(Dispatchers.IO) {
+                    if (userId != null) {
+                        AppDatabase.getDatabase(requireContext())
+                            .businessDao()
+                            .getBusinessesByUserId(userId!!)
+                    } else {
+                        AppDatabase.getDatabase(requireContext())
+                            .businessDao()
+                            .getAllBusinesses()
+                    }
+                }
+                businesses.addAll(localBusinesses)
+                Log.d("MapFragment", "Loaded ${localBusinesses.size} local businesses")
+
+                // Load Firebase businesses
+                val firebaseBusinesses = withContext(Dispatchers.IO) {
+                    val query = if (firebaseUserId != null) {
+                        firestore.collection("businesses")
+                            .whereEqualTo("userId", firebaseUserId)
+                    } else {
+                        firestore.collection("businesses")
+                    }
+
+                    query.get().await().documents.mapNotNull { document ->
+                        try {
+                            Business(
+                                businessId = document.id.hashCode().toLong(),
+                                userId = -1L,
+                                name = document.getString("name") ?: return@mapNotNull null,
+                                category = document.getString("category") ?: return@mapNotNull null,
+                                street = document.getString("street") ?: return@mapNotNull null,
+                                streetNumber = document.getString("streetNumber") ?: return@mapNotNull null,
+                                openingHours = document.getString("openingHours") ?: "",
+                                closingHours = document.getString("closingHours") ?: "",
+                                description = document.getString("description"),
+                                latitude = document.getDouble("latitude"),
+                                longitude = document.getDouble("longitude")
+                            )
+                        } catch (e: Exception) {
+                            Log.e("MapFragment", "Error parsing Firebase business: ${e.message}")
+                            null
+                        }
+                    }
+                }
+                businesses.addAll(firebaseBusinesses)
+                Log.d("MapFragment", "Loaded ${firebaseBusinesses.size} Firebase businesses")
+
+                // Convert to JSON for the map
+                val businessesJson = JSONArray().apply {
+                    businesses.forEach { business ->
+                        put(JSONObject().apply {
+                            put("id", business.businessId)
+                            put("name", business.name)
+                            put("address", "${business.street} ${business.streetNumber}, Tel Aviv, Israel")
+                            put("category", business.category)
+                            put("latitude", business.latitude)
+                            put("longitude", business.longitude)
+                        })
+                    }
                 }
 
-                // Debug log to check businesses
-                Log.d("MapFragment", "Number of businesses: ${businesses.size}")
-                businesses.forEach { business ->
-                    Log.d("MapFragment", "Business: ${business.name}, Address: ${business.street} ${business.streetNumber}")
+                // Log focused business details
+                if (focusBusinessId != null) {
+                    val focusedBusiness = businesses.find { it.businessId == focusBusinessId }
+                    Log.d("MapFragment", "Focus business details: " +
+                            "ID=${focusedBusiness?.businessId}, " +
+                            "Name=${focusedBusiness?.name}, " +
+                            "Lat=${focusedBusiness?.latitude}, " +
+                            "Lng=${focusedBusiness?.longitude}")
                 }
 
-                val businessesJson = businesses.map { business ->
-                    """{
-                        "id": ${business.businessId},
-                        "name": "${business.name.replace("\"", "\\\"")}",
-                        "address": "${business.street} ${business.streetNumber}, Tel Aviv, Israel",
-                        "category": "${business.category}",
-                        "latitude": ${business.latitude ?: "null"},
-                        "longitude": ${business.longitude ?: "null"}
-                    }"""
-                }.joinToString(",", "[", "]")
-
-                // Debug log to check JSON
-                Log.d("MapFragment", "Businesses JSON: $businessesJson")
-
-                val script = "loadBusinesses($businessesJson, ${focusBusinessId});"
+                // Load businesses into the map
+                val script = "loadBusinesses($businessesJson, $focusBusinessId);"
                 binding.mapWebView.evaluateJavascript(script) { result ->
-                    Log.d("MapFragment", "Script evaluation result: $result")
+                    Log.d("MapFragment", "Map script evaluation result: $result")
                 }
+
             } catch (e: Exception) {
                 Log.e("MapFragment", "Error loading businesses", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Error loading businesses: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
     }
@@ -161,9 +231,25 @@ class MapFragment : Fragment() {
     fun saveBusinessCoordinates(businessId: Long, latitude: Double, longitude: Double) {
         lifecycleScope.launch {
             try {
-                val businessDao = AppDatabase.getDatabase(requireContext()).businessDao()
-                businessDao.updateBusinessCoordinates(businessId, latitude, longitude)
-                Log.d("MapFragment", "Saved coordinates for business $businessId: $latitude, $longitude")
+                // Update Room database
+                AppDatabase.getDatabase(requireContext())
+                    .businessDao()
+                    .updateBusinessCoordinates(businessId, latitude, longitude)
+
+                // Update Firebase
+                val businessQuery = firestore.collection("businesses")
+                    .whereEqualTo("businessId", businessId)
+                    .get()
+                    .await()
+
+                businessQuery.documents.firstOrNull()?.reference?.update(
+                    mapOf(
+                        "latitude" to latitude,
+                        "longitude" to longitude
+                    )
+                )?.await()
+
+                Log.d("MapFragment", "Updated coordinates for business $businessId: $latitude, $longitude")
             } catch (e: Exception) {
                 Log.e("MapFragment", "Error saving coordinates for business $businessId", e)
             }

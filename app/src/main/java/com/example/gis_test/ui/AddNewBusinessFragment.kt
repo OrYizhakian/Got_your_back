@@ -14,7 +14,12 @@ import androidx.navigation.fragment.findNavController
 import com.example.GotYourBack.databinding.BusinessAddPageBinding
 import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.data.Business
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -25,6 +30,9 @@ class AddNewBusinessFragment : Fragment() {
     private lateinit var categories: Array<String>
     private lateinit var hours: Array<String>
     private lateinit var minutes: Array<String>
+
+    private val firestore = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -101,10 +109,8 @@ class AddNewBusinessFragment : Fragment() {
         val businessStreetNumber = binding.streetnumberEdt.text.toString().trim()
         val businessStreet = binding.streetNameEdt.text.toString().trim()
         val businessCategory = categories[binding.categoryPicker.value]
-        val openingHours =
-            "${hours[binding.openHourPicker.value]}:${minutes[binding.openMinutePicker.value]}"
-        val closingHours =
-            "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}"
+        val openingHours = "${hours[binding.openHourPicker.value]}:${minutes[binding.openMinutePicker.value]}"
+        val closingHours = "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}"
         val businessDescription = binding.businessDescEdt.text.toString().trim()
 
         if (!isInputValid(businessName, businessStreet, businessStreetNumber)) {
@@ -116,50 +122,47 @@ class AddNewBusinessFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 // Debug log: Check values before saving
-                Log.d(
-                    "SecondSignUpFragment",
-                    "Saving business: $businessName, $businessStreet, $businessCategory, $openingHours, $closingHours"
-                )
+                Log.d("AddNewBusinessFragment", "Saving business: $businessName, $businessStreet, $businessCategory, $openingHours, $closingHours")
 
-                val business = Business(
-                    userId = arguments?.getLong("userId") ?: -1L,
-                    businessId = 0L, // 0 if your database auto-generates the ID
-                    name = businessName,
-                    category = businessCategory,
-                    street = businessStreet,
-                    streetNumber = businessStreetNumber,
-                    openingHours = openingHours,
-                    closingHours = closingHours,
-                    description = businessDescription
-                )
-
-                AppDatabase.getDatabase(requireContext()).businessDao().insertBusiness(business)
-
-                Log.d("SecondSignUpFragment", "New business saved successfully: $business")
-
-                Toast.makeText(requireContext(), "Business saved successfully!", Toast.LENGTH_SHORT)
-                    .show()
-
-                val bundle = Bundle().apply {
-                    putLong("businessId", business.businessId)
-                    putString("name", business.name)
-                    putString("category", business.category)
-                    putString("street", business.street)
-                    putString("streetNumber", business.streetNumber)
-                    putString("openingHours", business.openingHours)
-                    putString("closingHours", business.closingHours)
-                    putString("description", business.description)
+                // Get current Firebase user
+                val currentUser = auth.currentUser
+                if (currentUser == null) {
+                    Toast.makeText(requireContext(), "No user logged in", Toast.LENGTH_SHORT).show()
+                    return@launch
                 }
-                findNavController().popBackStack()
 
+                // Create business map for Firestore
+                val businessMap = hashMapOf(
+                    "userId" to currentUser.uid,
+                    "name" to businessName,
+                    "category" to businessCategory,
+                    "street" to businessStreet,
+                    "streetNumber" to businessStreetNumber,
+                    "openingHours" to openingHours,
+                    "closingHours" to closingHours,
+                    "description" to businessDescription
+                )
+
+                // Save to Firestore
+                withContext(Dispatchers.IO) {
+                    firestore.collection("businesses")
+                        .add(businessMap)
+                        .await()
+                }
+
+                Log.d("AddNewBusinessFragment", "Business saved successfully")
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Business saved successfully!", Toast.LENGTH_SHORT).show()
+                    findNavController().popBackStack()
+                }
 
             } catch (e: Exception) {
                 // Show error message
-                Toast.makeText(requireContext(), "Failed to update business.", Toast.LENGTH_SHORT)
-                    .show()
-
-                // Log exception
-                Log.e("SecondSignUpFragment", "Error updating business", e)
+                Log.e("AddNewBusinessFragment", "Error saving business", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Failed to save business.", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

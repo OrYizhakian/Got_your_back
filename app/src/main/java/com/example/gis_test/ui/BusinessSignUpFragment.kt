@@ -45,6 +45,8 @@ class BusinessSignUpFragment : Fragment() {
     private lateinit var categories: Array<String>
     private lateinit var hours: Array<String>
     private lateinit var minutes: Array<String>
+    private val auth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,14 +59,12 @@ class BusinessSignUpFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupInitialData()
         setupUI()
         setupListeners()
     }
 
     private fun setupInitialData() {
-        // Initialize arrays
         categories = arrayOf(
             "Restaurant",
             "Coffee place",
@@ -98,61 +98,34 @@ class BusinessSignUpFragment : Fragment() {
         setupPicker(binding.closeHourPicker, hours)
         setupPicker(binding.closeMinutePicker, minutes)
         setupPicker(binding.categoryPicker, categories)
-
-        // Load any existing data from arguments
-        loadArgumentData()
-    }
-
-    private fun loadArgumentData() {
-        arguments?.let { args ->
-            binding.apply {
-                businessNameEdt.setText(args.getString("name", ""))
-                streetNameEdt.setText(args.getString("street", ""))
-                streetnumberEdt.setText(args.getString("streetNumber", ""))
-                businessDescEdt.setText(args.getString("description", ""))
-
-                args.getString("openingHours", "00:00").split(":").let { time ->
-                    openHourPicker.value = time[0].toIntOrNull() ?: 0
-                    openMinutePicker.value = time[1].toIntOrNull() ?: 0
-                }
-
-                args.getString("closingHours", "00:00").split(":").let { time ->
-                    closeHourPicker.value = time[0].toIntOrNull() ?: 0
-                    closeMinutePicker.value = time[1].toIntOrNull() ?: 0
-                }
-
-                val categoryIndex = categories.indexOf(args.getString("category", categories[0]))
-                categoryPicker.value = if (categoryIndex >= 0) categoryIndex else 0
-            }
-        }
     }
 
     private fun setupListeners() {
         binding.signupBtn.setOnClickListener {
-            saveBusiness()
+            signUpBusinessAndUser()
         }
     }
 
-    private fun saveBusiness() {
-        // Collect all business data
+    private fun signUpBusinessAndUser() {
         val businessData = collectBusinessData()
-
         if (!validateBusinessData(businessData)) {
             return
         }
 
         lifecycleScope.launch {
             try {
+                // Get user data from arguments
                 val userName = arguments?.getString("userName") ?: throw Exception("Username is missing")
                 val userEmail = arguments?.getString("userEmail") ?: throw Exception("Email is missing")
                 val userPassword = arguments?.getString("userPassword") ?: throw Exception("Password is missing")
 
                 // Step 1: Create Firebase User
-                val auth = FirebaseAuth.getInstance()
                 val authResult = withContext(Dispatchers.IO) {
                     auth.createUserWithEmailAndPassword(userEmail, userPassword).await()
                 }
                 val firebaseUserId = authResult.user?.uid ?: throw Exception("Failed to create Firebase user")
+
+                Log.d("BusinessSignUpFragment", "Created Firebase user with ID: $firebaseUserId")
 
                 // Step 2: Create User in Room Database
                 val localUserId = withContext(Dispatchers.IO) {
@@ -167,24 +140,27 @@ class BusinessSignUpFragment : Fragment() {
                     )
                 }
 
+                Log.d("BusinessSignUpFragment", "Created local user with ID: $localUserId")
+
                 // Step 3: Save User to Firestore
                 val userMap = hashMapOf(
-                    "uName" to userName,
+                    "userName" to userName,
                     "email" to userEmail,
-                    "password" to userPassword
+                    "localUserId" to localUserId
                 )
 
                 withContext(Dispatchers.IO) {
-                    FirebaseFirestore.getInstance()
-                        .collection("users")
+                    firestore.collection("users")
                         .document(firebaseUserId)
                         .set(userMap)
                         .await()
                 }
 
+                Log.d("BusinessSignUpFragment", "Saved user to Firestore")
+
                 // Step 4: Create Business in Room Database
                 val business = Business(
-                    userId = localUserId, // Using the local Room database user ID
+                    userId = localUserId,
                     name = businessData.name,
                     category = businessData.category,
                     street = businessData.street,
@@ -194,15 +170,18 @@ class BusinessSignUpFragment : Fragment() {
                     description = businessData.description
                 )
 
-                withContext(Dispatchers.IO) {
+                val localBusinessId = withContext(Dispatchers.IO) {
                     AppDatabase.getDatabase(requireContext())
                         .businessDao()
                         .insertBusiness(business)
                 }
 
+                Log.d("BusinessSignUpFragment", "Created local business with ID: $localBusinessId")
+
                 // Step 5: Save Business to Firestore
                 val businessMap = hashMapOf(
-                    "userId" to firebaseUserId,
+                    "userId" to firebaseUserId,  // This is the Firebase user ID
+                    "localBusinessId" to localBusinessId,
                     "name" to businessData.name,
                     "category" to businessData.category,
                     "street" to businessData.street,
@@ -213,11 +192,12 @@ class BusinessSignUpFragment : Fragment() {
                 )
 
                 withContext(Dispatchers.IO) {
-                    FirebaseFirestore.getInstance()
-                        .collection("businesses")
+                    firestore.collection("businesses")
                         .add(businessMap)
                         .await()
                 }
+
+                Log.d("BusinessSignUpFragment", "Saved business to Firestore")
 
                 // Success - navigate to login
                 withContext(Dispatchers.Main) {
@@ -226,11 +206,11 @@ class BusinessSignUpFragment : Fragment() {
                 }
 
             } catch (e: Exception) {
-                Log.e("BusinessSignUpFragment", "Error saving business", e)
+                Log.e("BusinessSignUpFragment", "Error during registration", e)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         requireContext(),
-                        "Failed to register: ${e.message}",
+                        "Registration failed: ${e.message}",
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -274,7 +254,6 @@ class BusinessSignUpFragment : Fragment() {
     }
 }
 
-// Data class to hold business information
 private data class BusinessData(
     val name: String,
     val streetNumber: String,
