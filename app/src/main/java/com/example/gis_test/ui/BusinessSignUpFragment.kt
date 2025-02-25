@@ -66,16 +66,9 @@ class BusinessSignUpFragment : Fragment() {
 
     private fun setupInitialData() {
         categories = arrayOf(
-            "Restaurant",
-            "Coffee place",
-            "Beauty saloon",
-            "Grocery store",
-            "Clothes store",
-            "Book store",
-            "Gym",
-            "Pharmacy",
-            "Hardware store",
-            "Jewelry store"
+            "Restaurant", "Coffee place", "Beauty salon", "Grocery store",
+            "Clothes store", "Book store", "Gym", "Pharmacy",
+            "Hardware store", "Jewelry store"
         )
         hours = (0..23).map { it.toString().padStart(2, '0') }.toTypedArray()
         minutes = arrayOf("00", "15", "30", "45")
@@ -107,19 +100,28 @@ class BusinessSignUpFragment : Fragment() {
     }
 
     private fun signUpBusinessAndUser() {
-        val businessData = collectBusinessData()
-        if (!validateBusinessData(businessData)) {
-            return
-        }
-
         lifecycleScope.launch {
             try {
-                // Get user data from arguments
+                // ✅ Get user input directly
+                val businessName = binding.businessNameEdt.text.toString().trim()
+                val streetNumber = binding.streetnumberEdt.text.toString().trim()
+                val street = binding.streetNameEdt.text.toString().trim()
+                val category = categories[binding.categoryPicker.value]
+                val openingHours = "${hours[binding.openHourPicker.value]}:${minutes[binding.openMinutePicker.value]}"
+                val closingHours = "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}"
+                val description = binding.businessDescEdt.text.toString().trim()
+
+                // ✅ Validate required fields
+                if (businessName.isEmpty() || street.isEmpty() || streetNumber.isEmpty()) {
+                    Toast.makeText(requireContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                // ✅ Firebase authentication (create user)
                 val userName = arguments?.getString("userName") ?: throw Exception("Username is missing")
                 val userEmail = arguments?.getString("userEmail") ?: throw Exception("Email is missing")
                 val userPassword = arguments?.getString("userPassword") ?: throw Exception("Password is missing")
 
-                // Step 1: Create Firebase User
                 val authResult = withContext(Dispatchers.IO) {
                     auth.createUserWithEmailAndPassword(userEmail, userPassword).await()
                 }
@@ -127,116 +129,74 @@ class BusinessSignUpFragment : Fragment() {
 
                 Log.d("BusinessSignUpFragment", "Created Firebase user with ID: $firebaseUserId")
 
-                // Step 2: Create User in Room Database
+                // ✅ Save user in local Room database
                 val localUserId = withContext(Dispatchers.IO) {
                     val userDao = AppDatabase.getDatabase(requireContext()).userDao()
                     userDao.insertUser(
-                        User(
-                            userName = userName,
-                            email = userEmail,
-                            password = userPassword,
-                            fireBaseId = firebaseUserId
-                        )
+                        User(userName = userName, email = userEmail, password = userPassword, fireBaseId = firebaseUserId)
                     )
                 }
 
                 Log.d("BusinessSignUpFragment", "Created local user with ID: $localUserId")
 
-                // Step 3: Save User to Firestore
-                val userMap = hashMapOf(
-                    "userName" to userName,
-                    "email" to userEmail,
-                    "localUserId" to localUserId
-                )
+                // ✅ Generate Firestore document reference first
+                val businessRef = firestore.collection("businesses").document() // 🔥 Generates a document with an ID
+                val firestoreBusinessId = businessRef.id // ✅ Get Firestore document ID
 
-                withContext(Dispatchers.IO) {
-                    firestore.collection("users")
-                        .document(firebaseUserId)
-                        .set(userMap)
-                        .await()
-                }
-
-                Log.d("BusinessSignUpFragment", "Saved user to Firestore")
-
-                // Step 4: Create Business in Room Database
-                val business = Business(
-                    userId = localUserId,
-                    name = businessData.name,
-                    category = businessData.category,
-                    street = businessData.street,
-                    streetNumber = businessData.streetNumber,
-                    openingHours = businessData.openingHours,
-                    closingHours = businessData.closingHours,
-                    description = businessData.description
-                )
-
-                val localBusinessId = withContext(Dispatchers.IO) {
-                    AppDatabase.getDatabase(requireContext())
-                        .businessDao()
-                        .insertBusiness(business)
-                }
-
-                Log.d("BusinessSignUpFragment", "Created local business with ID: $localBusinessId")
-
-                // Step 5: Save Business to Firestore
+                // ✅ Save business to Firestore (WITH the Firestore ID included)
                 val businessMap = hashMapOf(
-                    "userId" to firebaseUserId,  // This is the Firebase user ID
-                    "localBusinessId" to localBusinessId,
-                    "name" to businessData.name,
-                    "category" to businessData.category,
-                    "street" to businessData.street,
-                    "streetNumber" to businessData.streetNumber,
-                    "openingHours" to businessData.openingHours,
-                    "closingHours" to businessData.closingHours,
-                    "description" to businessData.description
+                    "businessIdFirestore" to firestoreBusinessId, // ✅ Store Firestore ID at creation
+                    "userId" to firebaseUserId,
+                    "name" to businessName,
+                    "category" to category,
+                    "street" to street,
+                    "streetNumber" to streetNumber,
+                    "openingHours" to openingHours,
+                    "closingHours" to closingHours,
+                    "description" to description
                 )
 
                 withContext(Dispatchers.IO) {
-                    firestore.collection("businesses")
-                        .add(businessMap)
-                        .await()
+                    businessRef.set(businessMap).await() // ✅ Set Firestore document WITH ID
                 }
 
-                Log.d("BusinessSignUpFragment", "Saved business to Firestore")
+                Log.d("BusinessSignUpFragment", "Saved business to Firestore with ID: $firestoreBusinessId")
 
-                // Success - navigate to login
+                // ✅ Save business in Room database
+                val business = Business(
+                    businessIdFirestore = firestoreBusinessId, // ✅ Now it's correctly stored
+                    userId = localUserId.toString(),
+                    name = businessName,
+                    category = category,
+                    street = street,
+                    streetNumber = streetNumber,
+                    openingHours = openingHours,
+                    closingHours = closingHours,
+                    description = description
+                )
+
+                withContext(Dispatchers.IO) {
+                    AppDatabase.getDatabase(requireContext()).businessDao().insertBusiness(business)
+                }
+
+                Log.d("BusinessSignUpFragment", "Saved business to Room with Firestore ID: $firestoreBusinessId")
+
+                // ✅ Navigate to login
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Registration successful!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Business registered successfully!", Toast.LENGTH_SHORT).show()
                     findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
                 }
 
             } catch (e: Exception) {
-                Log.e("BusinessSignUpFragment", "Error during registration", e)
+                Log.e("BusinessSignUpFragment", "Error during business registration", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Registration failed: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(requireContext(), "Registration failed: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
 
-    private fun collectBusinessData(): BusinessData {
-        return BusinessData(
-            name = binding.businessNameEdt.text.toString().trim(),
-            streetNumber = binding.streetnumberEdt.text.toString().trim(),
-            street = binding.streetNameEdt.text.toString().trim(),
-            category = categories[binding.categoryPicker.value],
-            openingHours = "${hours[binding.openHourPicker.value]}:${minutes[binding.openMinutePicker.value]}",
-            closingHours = "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}",
-            description = binding.businessDescEdt.text.toString().trim()
-        )
-    }
 
-    private fun validateBusinessData(data: BusinessData): Boolean {
-        if (!isInputValid(data.name, data.street, data.streetNumber)) {
-            Toast.makeText(requireContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show()
-            return false
-        }
-        return true
-    }
 
     private fun setupPicker(picker: android.widget.NumberPicker, values: Array<String>) {
         picker.minValue = 0
@@ -244,22 +204,8 @@ class BusinessSignUpFragment : Fragment() {
         picker.displayedValues = values
     }
 
-    private fun isInputValid(vararg inputs: String): Boolean {
-        return inputs.all { it.isNotBlank() }
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 }
-
-private data class BusinessData(
-    val name: String,
-    val streetNumber: String,
-    val street: String,
-    val category: String,
-    val openingHours: String,
-    val closingHours: String,
-    val description: String
-)

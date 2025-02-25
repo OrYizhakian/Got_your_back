@@ -2,10 +2,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:padding="30dp">
+    android:padding="30dp"
+    tools:context="com.example.gis_test.ui.BusinessDetailsFragment">
 
-    <!-- Business Name -->
+    <!-- com.example.gis_test.data.Business Name -->
     <TextView
         android:id="@+id/businessNameText"
         android:layout_width="match_parent"
@@ -22,7 +24,7 @@
         android:hint="Business Name"
         android:visibility="gone" />
 
-    <!-- Business Category -->
+    <!-- com.example.gis_test.data.Business Category -->
     <TextView
         android:id="@+id/businessCategoryText"
         android:layout_width="match_parent"
@@ -37,7 +39,7 @@
         android:hint="Category"
         android:visibility="gone" />
 
-    <!-- Business Address -->
+    <!-- com.example.gis_test.data.Business Address -->
     <TextView
         android:id="@+id/businessAddressText"
         android:layout_width="match_parent"
@@ -53,7 +55,7 @@
         android:visibility="gone" />
 
 
-    <!-- Business Hours -->
+    <!-- com.example.gis_test.data.Business Hours -->
     <TextView
         android:id="@+id/businessHoursText"
         android:layout_width="match_parent"
@@ -69,7 +71,7 @@
         android:visibility="gone" />
 
 
-    <!-- Business Description -->
+    <!-- com.example.gis_test.data.Business Description -->
     <TextView
         android:id="@+id/businessDescriptionText"
         android:layout_width="match_parent"

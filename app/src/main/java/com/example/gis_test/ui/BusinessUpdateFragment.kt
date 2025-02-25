@@ -1,6 +1,5 @@
 package com.example.gis_test.ui
 
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,25 +11,19 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.GotYourBack.databinding.BusinessEditPageBinding
-import com.example.GotYourBack.R
-import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.data.Business
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 class BusinessUpdateFragment : Fragment() {
+
     private var _binding: BusinessEditPageBinding? = null
     private val binding get() = _binding!!
-
-    private lateinit var categories: Array<String>
-    private lateinit var hours: Array<String>
-    private lateinit var minutes: Array<String>
+    private var business: Business? = null
+    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = BusinessEditPageBinding.inflate(inflater, container, false)
         return binding.root
@@ -39,141 +32,109 @@ class BusinessUpdateFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Load streets data
-        val streets = loadStreetsFromCsv(requireContext())
-        if (streets.isEmpty()) {
-            Toast.makeText(requireContext(), "Failed to load streets data.", Toast.LENGTH_SHORT).show()
+        business = arguments?.getParcelable("business") // ✅ Retrieve business
+
+        if (business != null) {
+            populateFields(business!!) // ✅ Fill fields with existing data
+        } else {
+            Toast.makeText(requireContext(), "Error: Business not found.", Toast.LENGTH_SHORT).show()
+            findNavController().popBackStack()
         }
 
-        binding.streetNameEdt.setAdapter(
-            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, streets)
+        setupListeners()
+    }
+
+    private fun populateFields(business: Business) {
+        binding.businessNameEdt.setText(business.name)
+        binding.streetNameEdt.setText(business.street)
+        binding.streetnumberEdt.setText(business.streetNumber)
+        binding.businessDescEdt.setText(business.description ?: "")
+
+        // Set category picker options
+        val categories = arrayOf(
+            "Restaurant", "Coffee place", "Beauty salon", "Grocery store",
+            "Clothes store", "Book store", "Gym", "Pharmacy",
+            "Hardware store", "Jewelry store"
         )
 
-        // Load categories and time pickers
-        categories = arrayOf(
-            "Restaurant",
-            "Coffee place",
-            "Beauty saloon",
-            "Grocery store",
-            "Clothes store",
-            "Book store",
-            "Gym",
-            "Pharmacy",
-            "Hardware store",
-            "Jewelry store"
-        )
-        hours = (0..23).map { it.toString().padStart(2, '0') }.toTypedArray()
-        minutes = arrayOf("00", "15", "30", "45")
+        val categoryIndex = categories.indexOf(business.category).takeIf { it >= 0 } ?: 0
+        binding.categoryPicker.minValue = 0
+        binding.categoryPicker.maxValue = categories.size - 1
+        binding.categoryPicker.displayedValues = categories
+        binding.categoryPicker.value = categoryIndex
 
-        setupPicker(binding.openHourPicker, hours)
-        setupPicker(binding.openMinutePicker, minutes)
-        setupPicker(binding.closeHourPicker, hours)
-        setupPicker(binding.closeMinutePicker, minutes)
-        setupPicker(binding.categoryPicker, categories)
+        // Set opening and closing hours
+        val hours = (0..23).map { it.toString().padStart(2, '0') }.toTypedArray()
+        val minutes = arrayOf("00", "15", "30", "45")
 
-        // Load arguments if present
-        arguments?.let { args ->
-            binding.businessNameEdt.setText(args.getString("name", ""))
-            binding.streetNameEdt.setText(args.getString("street", ""))
-            binding.streetnumberEdt.setText(args.getString("streetNumber", ""))
-            binding.businessDescEdt.setText(args.getString("description", ""))
+        val openHour = business.openingHours.substringBefore(":").toIntOrNull() ?: 0
+        val openMinute = business.openingHours.substringAfter(":").toIntOrNull() ?: 0
+        val closeHour = business.closingHours.substringBefore(":").toIntOrNull() ?: 0
+        val closeMinute = business.closingHours.substringAfter(":").toIntOrNull() ?: 0
 
-            val openingHours = args.getString("openingHours", "00:00").split(":")
-            binding.openHourPicker.value = openingHours[0].toInt()
-            binding.openMinutePicker.value = openingHours[1].toInt()
+        binding.openHourPicker.minValue = 0
+        binding.openHourPicker.maxValue = hours.size - 1
+        binding.openHourPicker.displayedValues = hours
+        binding.openHourPicker.value = openHour
 
-            val closingHours = args.getString("closingHours", "00:00").split(":")
-            binding.closeHourPicker.value = closingHours[0].toInt()
-            binding.closeMinutePicker.value = closingHours[1].toInt()
+        binding.openMinutePicker.minValue = 0
+        binding.openMinutePicker.maxValue = minutes.size - 1
+        binding.openMinutePicker.displayedValues = minutes
+        binding.openMinutePicker.value = minutes.indexOf(openMinute.toString().padStart(2, '0'))
 
-            val categoryIndex = categories.indexOf(args.getString("category", categories[0]))
-            binding.categoryPicker.value = if (categoryIndex >= 0) categoryIndex else 0
-        }
+        binding.closeHourPicker.minValue = 0
+        binding.closeHourPicker.maxValue = hours.size - 1
+        binding.closeHourPicker.displayedValues = hours
+        binding.closeHourPicker.value = closeHour
 
-        // Save button listener
+        binding.closeMinutePicker.minValue = 0
+        binding.closeMinutePicker.maxValue = minutes.size - 1
+        binding.closeMinutePicker.displayedValues = minutes
+        binding.closeMinutePicker.value = minutes.indexOf(closeMinute.toString().padStart(2, '0'))
+    }
+
+    private fun setupListeners() {
         binding.updateBtn.setOnClickListener {
-            saveBusiness()
+            updateBusinessInFirestore()
         }
     }
 
-    private fun saveBusiness() {
-        val businessName = binding.businessNameEdt.text.toString().trim()
-        val businessStreetNumber = binding.streetnumberEdt.text.toString().trim()
-        val businessStreet = binding.streetNameEdt.text.toString().trim()
-        val businessCategory = categories[binding.categoryPicker.value]
-        val openingHours =
-            "${hours[binding.openHourPicker.value]}:${minutes[binding.openMinutePicker.value]}"
-        val closingHours =
-            "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}"
-        val businessDescription = binding.businessDescEdt.text.toString().trim()
+    private fun updateBusinessInFirestore() {
+        val businessId = business?.businessIdFirestore
 
-        if (!isInputValid(businessName, businessStreet, businessStreetNumber)) {
-            Toast.makeText(requireContext(), "Please fill in all the fields", Toast.LENGTH_SHORT)
-                .show()
+        // ✅ Ensure businessIdFirestore is valid
+        if (businessId.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Error: Business ID is missing.", Toast.LENGTH_SHORT).show()
+            Log.e("BusinessUpdateFragment", "Error: businessIdFirestore is null or empty")
             return
         }
 
-        val businessId = arguments?.getLong("businessId") ?: -1L
-        if (businessId == -1L) {
-            Toast.makeText(requireContext(), "Error: Business ID is missing.", Toast.LENGTH_SHORT)
-                .show()
-            return
-        }
+        val updatedBusiness = hashMapOf(
+            "name" to binding.businessNameEdt.text.toString().trim(),
+            "category" to binding.categoryPicker.displayedValues[binding.categoryPicker.value],
+            "street" to binding.streetNameEdt.text.toString().trim(),
+            "streetNumber" to binding.streetnumberEdt.text.toString().trim(),
+            "openingHours" to "${binding.openHourPicker.displayedValues[binding.openHourPicker.value]}:${binding.openMinutePicker.displayedValues[binding.openMinutePicker.value]}",
+            "closingHours" to "${binding.closeHourPicker.displayedValues[binding.closeHourPicker.value]}:${binding.closeMinutePicker.displayedValues[binding.closeMinutePicker.value]}",
+            "description" to binding.businessDescEdt.text.toString().trim()
+        )
 
-        lifecycleScope.launch {
-            try {
-                // Debug log: Check values before saving
-                Log.d("SecondSignUpFragment", "Saving business: $businessName, $businessStreet, $businessCategory, $openingHours, $closingHours")
+        val firestore = FirebaseFirestore.getInstance()
 
-                val business = Business(
-                    userId = arguments?.getLong("userId") ?: -1L,
-                    businessId = businessId,
-                    name = businessName,
-                    category = businessCategory,
-                    street = businessStreet,
-                    streetNumber = businessStreetNumber,
-                    openingHours = openingHours,
-                    closingHours = closingHours,
-                    description = businessDescription
-                )
+        // ✅ Ensure the document reference is valid
+        val businessRef = firestore.collection("businesses").document(businessId)
 
-                val bundle = Bundle().apply {
-                    putLong("businessId", business.businessId)
-                    putString("name", business.name)
-                    putString("category", business.category)
-                    putString("street", business.street)
-                    putString("streetNumber", business.streetNumber)
-                    putString("openingHours", business.openingHours)
-                    putString("closingHours", business.closingHours)
-                    putString("description", business.description)
-                }
-
-                findNavController().navigate(
-                    R.id.action_businessUpdateFragment_to_businessDetailsFragment,
-                    bundle
-                )
-
+        businessRef.update(updatedBusiness as Map<String, Any>)
+            .addOnSuccessListener {
                 Toast.makeText(requireContext(), "Business updated successfully!", Toast.LENGTH_SHORT).show()
-
-            } catch (e: Exception) {
-                // Show error message
-                Toast.makeText(requireContext(), "Failed to update business.", Toast.LENGTH_SHORT).show()
-
-                // Log exception
-                Log.e("SecondSignUpFragment", "Error updating business", e)
+                findNavController().popBackStack() // ✅ Navigate back after success
             }
-        }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Failed to update: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("BusinessUpdateFragment", "Error updating business", e)
+            }
     }
 
-    private fun setupPicker(picker: android.widget.NumberPicker, values: Array<String>) {
-        picker.minValue = 0
-        picker.maxValue = values.size - 1
-        picker.displayedValues = values
-    }
-
-    private fun isInputValid(vararg inputs: String): Boolean {
-        return inputs.all { it.isNotBlank() }
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()

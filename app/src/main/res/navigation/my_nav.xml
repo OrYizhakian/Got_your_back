@@ -87,9 +87,6 @@
             android:id="@+id/action_myBusinessesFragment_to_mapFragment2"
             app:destination="@id/mapFragment2" />
         <action
-            android:id="@+id/action_myBusinessesFragment_to_businessDetailsFragment"
-            app:destination="@id/businessDetailsFragment" />
-        <action
             android:id="@+id/action_myBusinessesFragment_to_addNewBusinessFragment"
             app:destination="@id/addNewBusinessFragment" />
         <action
@@ -97,15 +94,9 @@
             app:destination="@id/loginPageFragment"
             app:popUpTo="@id/loginPageFragment"
             app:popUpToInclusive="true" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/businessDetailsFragment"
-        android:name="BusinessDetailsFragment"
-        android:label="BusinessDetailsFragment" >
         <action
-            android:id="@+id/action_businessDetailsFragment_to_businessUpdateFragment"
-            app:destination="@id/businessUpdateFragment" />
+            android:id="@+id/action_myBusinessesFragment_to_businessDetailsFragment2"
+            app:destination="@id/businessDetailsFragment2" />
     </fragment>
 
     <fragment
@@ -124,10 +115,17 @@
         android:name="com.example.gis_test.ui.BusinessUpdateFragment"
         android:label="BusinessUpdateFragment" >
         <action
-            android:id="@+id/action_businessUpdateFragment_to_businessDetailsFragment"
-            app:destination="@id/businessDetailsFragment"
-            app:popUpTo="@id/businessDetailsFragment"
-            app:popUpToInclusive="true" />
+            android:id="@+id/action_businessUpdateFragment_to_businessDetailsFragment2"
+            app:destination="@id/businessDetailsFragment2" />
+    </fragment>
+    <fragment
+        android:id="@+id/businessDetailsFragment2"
+        android:name="com.example.gis_test.ui.BusinessDetailsFragment"
+        android:label="business_details"
+        tools:layout="@layout/business_details" >
+        <action
+            android:id="@+id/action_businessDetailsFragment2_to_businessUpdateFragment"
+            app:destination="@id/businessUpdateFragment" />
     </fragment>
 
 </navigation>

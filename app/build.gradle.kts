@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
     id("com.google.gms.google-services") // for Firebase
+    id("kotlin-parcelize")
 }
 
 android {
@@ -43,6 +44,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.media3.common.ktx)
     //implementation(libs.firebase.firestore)
     val roomVersion = "2.6.1"
 

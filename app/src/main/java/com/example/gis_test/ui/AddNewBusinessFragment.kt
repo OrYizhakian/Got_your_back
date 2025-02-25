@@ -150,10 +150,10 @@ class AddNewBusinessFragment : Fragment() {
                         .await()
                 }
 
-                Log.d("AddNewBusinessFragment", "Business saved successfully")
+                Log.d("AddNewBusinessFragment", "com.example.gis_test.data.Business saved successfully")
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Business saved successfully!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "com.example.gis_test.data.Business saved successfully!", Toast.LENGTH_SHORT).show()
                     findNavController().popBackStack()
                 }
 

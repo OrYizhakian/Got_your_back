@@ -34,34 +34,43 @@ class MyBusinessesFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = MyBusinessScreenBinding.inflate(inflater, container, false)
+
+        // ✅ Setup RecyclerView & Buttons
         setupRecyclerView()
         setupButtons()
+
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val firebaseUserId = arguments?.getString("userId") ?: auth.currentUser?.uid
+
+        if (firebaseUserId != null) {
+            Log.d("MyBusinessesFragment", "Fetching businesses for user: $firebaseUserId")
+            loadBusinesses(firebaseUserId)
+        } else {
+            Log.e("MyBusinessesFragment", "No user ID found")
+            Toast.makeText(requireContext(), "Error: No user ID found", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun setupRecyclerView() {
         adapter = BusinessAdapter(
             onShortClick = { business ->
                 val bundle = Bundle().apply {
-                    putLong("businessId", business.businessId)
+                    putParcelable("business", business)
                 }
                 findNavController().navigate(
-                    R.id.action_myBusinessesFragment_to_businessDetailsFragment,
+                    R.id.action_myBusinessesFragment_to_businessDetailsFragment2,
                     bundle
                 )
             },
             onLongPress = { business ->
                 val bundle = Bundle().apply {
-                    putLong("focusBusinessId", business.businessId)
-                    putString("firebaseUserId", auth.currentUser?.uid)
-                    // Pass all business details for the map
-                    putString("businessName", business.name)
-                    putString("businessStreet", business.street)
-                    putString("businessStreetNumber", business.streetNumber)
-                    putString("businessCategory", business.category)
+                    putParcelable("business", business)
                 }
-
-                Log.d("MyBusinessesFragment", "Navigating to map with business: ${business.name}")
                 findNavController().navigate(
                     R.id.action_myBusinessesFragment_to_mapFragment2,
                     bundle
@@ -77,10 +86,10 @@ class MyBusinessesFragment : Fragment() {
 
     private fun setupButtons() {
         binding.fabAddBusiness.setOnClickListener {
-            val userId = arguments?.getLong("userId") ?: -1L
-            if (userId != -1L) {
+            val userId = arguments?.getString("userId") ?: auth.currentUser?.uid
+            if (userId != null) {
                 val bundle = Bundle().apply {
-                    putLong("userId", userId)
+                    putString("userId", userId) // ✅ Fix: Use putString() instead of putLong()
                 }
                 findNavController().navigate(
                     R.id.action_myBusinessesFragment_to_addNewBusinessFragment,
@@ -94,85 +103,55 @@ class MyBusinessesFragment : Fragment() {
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        loadBusinesses()
-    }
-
-    private fun loadBusinesses() {
+    private fun loadBusinesses(userId: String) {
         lifecycleScope.launch {
             try {
                 val businesses = mutableListOf<Business>()
 
-                // Get current Firebase user ID
-                val firebaseUserId = auth.currentUser?.uid
-                Log.d("MyBusinessesFragment", "Current Firebase User ID: $firebaseUserId")
-
-                // Load Firebase businesses
-                if (firebaseUserId != null) {
-                    val firebaseBusinesses = withContext(Dispatchers.IO) {
-                        val snapshot = firestore.collection("businesses")
-                            .whereEqualTo("userId", firebaseUserId)
-                            .get()
-                            .await()
-
-                        Log.d("MyBusinessesFragment", "Found ${snapshot.documents.size} Firebase businesses")
-
-                        snapshot.documents.mapNotNull { document ->
-                            try {
-                                // Create Business object exactly matching Firebase structure
-                                Business(
-                                    businessId = document.id.hashCode().toLong(),
-                                    userId = -1L, // We use -1 for Firebase businesses
-                                    name = document.getString("name") ?: "",
-                                    category = document.getString("category") ?: "",
-                                    street = document.getString("street") ?: "",
-                                    streetNumber = document.getString("streetNumber") ?: "",
-                                    openingHours = document.getString("openingHours") ?: "00:00",
-                                    closingHours = document.getString("closingHours") ?: "00:00",
-                                    description = document.getString("description") ?: ""
-                                ).also { business ->
-                                    Log.d("MyBusinessesFragment", """
-                                        Parsed Firebase business:
-                                        - ID: ${business.businessId}
-                                        - Name: ${business.name}
-                                        - Category: ${business.category}
-                                        - Address: ${business.street} ${business.streetNumber}
-                                        - Hours: ${business.openingHours} - ${business.closingHours}
-                                    """.trimIndent())
-                                }
-                            } catch (e: Exception) {
-                                Log.e("MyBusinessesFragment", "Error parsing business document: ${e.message}")
-                                null
-                            }
-                        }
-                    }
-                    businesses.addAll(firebaseBusinesses)
+                val snapshot = withContext(Dispatchers.IO) {
+                    firestore.collection("businesses")
+                        .whereEqualTo("userId", userId)  // ✅ Fetch only businesses for logged-in user
+                        .get()
+                        .await()
                 }
 
-                // Update UI
+                Log.d("MyBusinessesFragment", "Firestore returned ${snapshot.documents.size} businesses.")
+
+                snapshot.documents.mapNotNullTo(businesses) { document ->
+                    val firestoreId = document.getString("businessIdFirestore") ?: document.id
+                    Log.d("MyBusinessesFragment", "Retrieved Firestore ID: $firestoreId")
+
+                    Business(
+                        businessId = firestoreId.hashCode().toLong(), // ✅ Use Firestore ID correctly
+                        businessIdFirestore = firestoreId,
+                        userId = document.getString("userId") ?: "",
+                        name = document.getString("name") ?: "",
+                        category = document.getString("category") ?: "",
+                        street = document.getString("street") ?: "",
+                        streetNumber = document.getString("streetNumber") ?: "",
+                        openingHours = document.getString("openingHours") ?: "00:00",
+                        closingHours = document.getString("closingHours") ?: "00:00",
+                        description = document.getString("description") ?: ""
+                    )
+                }
+
+                // ✅ Update UI
                 withContext(Dispatchers.Main) {
                     if (businesses.isNotEmpty()) {
                         binding.businessListEmptyMessage.visibility = View.GONE
                         adapter.submitList(businesses)
-                        Log.d("MyBusinessesFragment", "Displaying ${businesses.size} businesses")
                     } else {
                         binding.businessListEmptyMessage.apply {
                             text = "No businesses found."
                             visibility = View.VISIBLE
                         }
-                        Log.d("MyBusinessesFragment", "No businesses found to display")
                     }
                 }
 
             } catch (e: Exception) {
                 Log.e("MyBusinessesFragment", "Error loading businesses", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Error loading businesses: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(requireContext(), "Error loading businesses", Toast.LENGTH_LONG).show()
                     binding.businessListEmptyMessage.apply {
                         text = "Error loading businesses"
                         visibility = View.VISIBLE

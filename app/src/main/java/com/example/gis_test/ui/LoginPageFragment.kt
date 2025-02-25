@@ -17,6 +17,7 @@ import com.example.gis_test.data.User
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 class LoginPageFragment : Fragment() {
@@ -50,33 +51,37 @@ class LoginPageFragment : Fragment() {
     }
 
     private fun handleLogin() {
+        val email = binding.emailEdt.text.toString().trim()
         val password = binding.passwordEdt.text.toString().trim()
-        val userEmail = binding.emailEdt.text.toString().trim()
 
-        if (!validateInput(userEmail, password)) {
-            return
-        }
+        if (email.isNotEmpty() && password.isNotEmpty()) {
+            lifecycleScope.launch {
+                try {
+                    val authResult = auth.signInWithEmailAndPassword(email, password).await()
+                    val firebaseUserId =
+                        authResult.user?.uid ?: throw Exception("Failed to retrieve user ID")
 
-        lifecycleScope.launch {
-            try {
-                // First try local authentication
-                val localUserId = withContext(Dispatchers.IO) {
-                    AppDatabase.getDatabase(requireContext())
-                        .userDao()
-                        .getUserIdByCredentials(userEmail, password)
+                    Log.d("LoginFragment", "User logged in with ID: $firebaseUserId")
+
+                    // ✅ Navigate to MyBusinessesFragment and pass the user ID
+                    val bundle = Bundle().apply {
+                        putString("userId", firebaseUserId)
+                    }
+                    findNavController().navigate(
+                        R.id.action_loginPageFragment_to_myBusinessesFragment, bundle
+                    )
+
+                } catch (e: Exception) {
+                    Log.e("LoginFragment", "Login failed", e)
+                    Toast.makeText(
+                        requireContext(),
+                        "Login failed: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
-
-                if (localUserId != null) {
-                    navigateToBusinesses(localUserId)
-                    return@launch
-                }
-
-                // If local auth fails, try Firebase
-                authenticateWithFirebase(userEmail, password)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error during login", e)
-                showError("Login failed: ${e.message}")
             }
+        } else {
+            Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -124,7 +129,7 @@ class LoginPageFragment : Fragment() {
                             fireBaseId = firebaseUser.uid
                         )
                     )
-                    localUser = userDao.getUserById(userId)
+                    localUser = userDao.getUserById(userId.toString())
                 }
 
                 withContext(Dispatchers.Main) {

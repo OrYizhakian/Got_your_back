@@ -60,6 +60,11 @@ class MapFragment : Fragment() {
         return binding.root
     }
 
+    override fun onResume() {
+        super.onResume()
+        loadAllBusinesses()
+    }
+
     private fun setupWebView() {
         binding.mapWebView.apply {
             settings.apply {
@@ -82,30 +87,12 @@ class MapFragment : Fragment() {
             addJavascriptInterface(this@MapFragment, "Android")
 
             webViewClient = object : WebViewClient() {
-                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                    super.onPageStarted(view, url, favicon)
-                }
-
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
-                    view?.evaluateJavascript("""
-                        console.log = function(message) {
-                            Android.consoleLog(message);
-                        };
-                    """.trimIndent(), null)
                     view?.evaluateJavascript(
                         "if (typeof onWebViewReady === 'function') { onWebViewReady(); }",
                         null
                     )
-                }
-
-                override fun onReceivedError(
-                    view: WebView?,
-                    request: WebResourceRequest?,
-                    error: WebResourceError?
-                ) {
-                    super.onReceivedError(view, request, error)
-                    Log.e("MapFragment", "WebView error: ${error?.description}")
                 }
             }
         }
@@ -118,7 +105,6 @@ class MapFragment : Fragment() {
             try {
                 val businesses = mutableListOf<Business>()
 
-                // Load Room businesses
                 val localBusinesses = withContext(Dispatchers.IO) {
                     if (userId != null) {
                         AppDatabase.getDatabase(requireContext())
@@ -131,22 +117,13 @@ class MapFragment : Fragment() {
                     }
                 }
                 businesses.addAll(localBusinesses)
-                Log.d("MapFragment", "Loaded ${localBusinesses.size} local businesses")
 
-                // Load Firebase businesses
                 val firebaseBusinesses = withContext(Dispatchers.IO) {
-                    val query = if (firebaseUserId != null) {
-                        firestore.collection("businesses")
-                            .whereEqualTo("userId", firebaseUserId)
-                    } else {
-                        firestore.collection("businesses")
-                    }
-
-                    query.get().await().documents.mapNotNull { document ->
+                    firestore.collection("businesses").get().await().documents.mapNotNull { document ->
                         try {
                             Business(
                                 businessId = document.id.hashCode().toLong(),
-                                userId = -1L,
+                                userId = (-1L).toString(),
                                 name = document.getString("name") ?: return@mapNotNull null,
                                 category = document.getString("category") ?: return@mapNotNull null,
                                 street = document.getString("street") ?: return@mapNotNull null,
@@ -158,21 +135,18 @@ class MapFragment : Fragment() {
                                 longitude = document.getDouble("longitude")
                             )
                         } catch (e: Exception) {
-                            Log.e("MapFragment", "Error parsing Firebase business: ${e.message}")
                             null
                         }
                     }
                 }
                 businesses.addAll(firebaseBusinesses)
-                Log.d("MapFragment", "Loaded ${firebaseBusinesses.size} Firebase businesses")
 
-                // Convert to JSON for the map
                 val businessesJson = JSONArray().apply {
                     businesses.forEach { business ->
                         put(JSONObject().apply {
                             put("id", business.businessId)
                             put("name", business.name)
-                            put("address", "${business.street} ${business.streetNumber}, Tel Aviv, Israel")
+                            put("address", "${business.street} ${business.streetNumber}")
                             put("category", business.category)
                             put("latitude", business.latitude)
                             put("longitude", business.longitude)
@@ -180,78 +154,9 @@ class MapFragment : Fragment() {
                     }
                 }
 
-                // Log focused business details
-                if (focusBusinessId != null) {
-                    val focusedBusiness = businesses.find { it.businessId == focusBusinessId }
-                    Log.d("MapFragment", "Focus business details: " +
-                            "ID=${focusedBusiness?.businessId}, " +
-                            "Name=${focusedBusiness?.name}, " +
-                            "Lat=${focusedBusiness?.latitude}, " +
-                            "Lng=${focusedBusiness?.longitude}")
-                }
-
-                // Load businesses into the map
-                val script = "loadBusinesses($businessesJson, $focusBusinessId);"
-                binding.mapWebView.evaluateJavascript(script) { result ->
-                    Log.d("MapFragment", "Map script evaluation result: $result")
-                }
-
+                binding.mapWebView.evaluateJavascript("loadBusinesses($businessesJson, $focusBusinessId);", null)
             } catch (e: Exception) {
                 Log.e("MapFragment", "Error loading businesses", e)
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Error loading businesses: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
-    }
-
-    @JavascriptInterface
-    fun consoleLog(message: String) {
-        Log.d("WebView Console", message)
-    }
-
-    @JavascriptInterface
-    fun sendCoordinates(lat: Double, lng: Double) {
-        Log.d("MapFragment", "Received coordinates: $lat, $lng")
-    }
-
-    @JavascriptInterface
-    fun onSearchError(error: String) {
-        Log.e("MapFragment", "Search error: $error")
-        activity?.runOnUiThread {
-            Toast.makeText(requireContext(), "Error finding location: $error", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    @JavascriptInterface
-    fun saveBusinessCoordinates(businessId: Long, latitude: Double, longitude: Double) {
-        lifecycleScope.launch {
-            try {
-                // Update Room database
-                AppDatabase.getDatabase(requireContext())
-                    .businessDao()
-                    .updateBusinessCoordinates(businessId, latitude, longitude)
-
-                // Update Firebase
-                val businessQuery = firestore.collection("businesses")
-                    .whereEqualTo("businessId", businessId)
-                    .get()
-                    .await()
-
-                businessQuery.documents.firstOrNull()?.reference?.update(
-                    mapOf(
-                        "latitude" to latitude,
-                        "longitude" to longitude
-                    )
-                )?.await()
-
-                Log.d("MapFragment", "Updated coordinates for business $businessId: $latitude, $longitude")
-            } catch (e: Exception) {
-                Log.e("MapFragment", "Error saving coordinates for business $businessId", e)
             }
         }
     }
