@@ -13,6 +13,8 @@
     import android.view.LayoutInflater
     import android.view.View
     import android.view.ViewGroup
+    import android.widget.ImageButton
+    import android.widget.PopupMenu
     import androidx.appcompat.app.AlertDialog
     import androidx.core.content.ContextCompat
     import androidx.fragment.app.Fragment
@@ -61,15 +63,13 @@
             val mapFragment =
                 childFragmentManager.findFragmentById(R.id.map_fragment) as? SupportMapFragment
             mapFragment?.getMapAsync(this)
-            val themeButton: View = view.findViewById(R.id.theme_button)
-            themeButton.setOnClickListener {
-                showThemeSelectionDialog()
-            }
 
-            // Find the filter button (Make sure to add this in your layout)
-            val filterButton: View = view.findViewById(R.id.filter_button)
-            filterButton.setOnClickListener {
-                showCategoryFilterDialog()
+            // ✅ Find the burger button
+            val burgerButton: ImageButton = view.findViewById(R.id.burger_button)
+
+            // ✅ Show menu when clicked
+            burgerButton.setOnClickListener {
+                showMenu(it)
             }
 
             return view
@@ -331,6 +331,29 @@
                 }
                 .show()
         }
+
+        private fun showMenu(anchor: View) {
+            val popupMenu = PopupMenu(requireContext(), anchor)
+            popupMenu.menuInflater.inflate(R.menu.map_options_menu, popupMenu.menu)
+
+            // Handle menu item clicks
+            popupMenu.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.menu_change_theme -> {
+                        showThemeSelectionDialog() // ✅ Open Theme Selection
+                        true
+                    }
+                    R.id.menu_filter -> {
+                        showCategoryFilterDialog() // ✅ Open Filter Selection
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+            popupMenu.show()
+        }
+
 
 
 
