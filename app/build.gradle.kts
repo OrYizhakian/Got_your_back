@@ -1,13 +1,9 @@
-
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
     id("com.google.gms.google-services") // for Firebase
     id("kotlin-parcelize")
-    id ("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
-
 }
 
 android {
@@ -45,7 +41,6 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-
 }
 
 dependencies {
@@ -80,14 +75,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
-    implementation ("com.google.android.gms:play-services-maps:17.0.0")
-
-    implementation ("com.google.maps.android:android-maps-utils:2.2.5")
-
-    implementation( "com.squareup.okhttp3:okhttp:4.10.0")
-
-
 }
 
 // run Google Services Plugin

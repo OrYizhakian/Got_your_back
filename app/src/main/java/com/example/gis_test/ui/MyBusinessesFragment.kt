@@ -28,7 +28,6 @@ class MyBusinessesFragment : Fragment() {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -70,8 +69,7 @@ class MyBusinessesFragment : Fragment() {
             },
             onLongPress = { business ->
                 val bundle = Bundle().apply {
-                    putDouble("latitude", business.latitude ?: 0.0)
-                    putDouble("longitude", business.longitude ?: 0.0)
+                    putParcelable("business", business)
                 }
                 findNavController().navigate(
                     R.id.action_myBusinessesFragment_to_mapFragment2,
@@ -121,11 +119,10 @@ class MyBusinessesFragment : Fragment() {
 
                 snapshot.documents.mapNotNullTo(businesses) { document ->
                     val firestoreId = document.getString("businessIdFirestore") ?: document.id
-                    val lat = document.getDouble("latitude")
-                    val lng = document.getDouble("longitude")
+                    Log.d("MyBusinessesFragment", "Retrieved Firestore ID: $firestoreId")
 
                     Business(
-                        businessId = firestoreId.hashCode().toLong(),
+                        businessId = firestoreId.hashCode().toLong(), // ✅ Use Firestore ID correctly
                         businessIdFirestore = firestoreId,
                         userId = document.getString("userId") ?: "",
                         name = document.getString("name") ?: "",
@@ -134,9 +131,7 @@ class MyBusinessesFragment : Fragment() {
                         streetNumber = document.getString("streetNumber") ?: "",
                         openingHours = document.getString("openingHours") ?: "00:00",
                         closingHours = document.getString("closingHours") ?: "00:00",
-                        description = document.getString("description") ?: "",
-                        latitude = lat,                // <––– use them here
-                        longitude = lng                // <––– use them here
+                        description = document.getString("description") ?: ""
                     )
                 }
 
