@@ -1,6 +1,5 @@
 package com.example.gis_test.ui
 
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,16 +11,15 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.GotYourBack.databinding.BusinessAddPageBinding
-import com.example.gis_test.data.AppDatabase
-import com.example.gis_test.data.Business
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 
 class AddNewBusinessFragment : Fragment() {
     private var _binding: BusinessAddPageBinding? = null
@@ -33,6 +31,7 @@ class AddNewBusinessFragment : Fragment() {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private val client = OkHttpClient() // HTTP client for geocoding
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,8 +48,7 @@ class AddNewBusinessFragment : Fragment() {
         // Load streets data
         val streets = loadStreetsFromCsv(requireContext())
         if (streets.isEmpty()) {
-            Toast.makeText(requireContext(), "Failed to load streets data.", Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(requireContext(), "Failed to load streets data.", Toast.LENGTH_SHORT).show()
         }
 
         binding.streetNameEdt.setAdapter(
@@ -61,7 +59,7 @@ class AddNewBusinessFragment : Fragment() {
         categories = arrayOf(
             "Restaurant",
             "Coffee place",
-            "Beauty saloon",
+            "Beauty salon",
             "Grocery store",
             "Clothes store",
             "Book store",
@@ -72,12 +70,34 @@ class AddNewBusinessFragment : Fragment() {
         )
         hours = (0..23).map { it.toString().padStart(2, '0') }.toTypedArray()
         minutes = arrayOf("00", "15", "30", "45")
+        // Configure pickers directly
+        binding.openHourPicker.apply {
+            minValue = 0
+            maxValue = hours.size - 1
+            displayedValues = hours
+        }
+        binding.openMinutePicker.apply {
+            minValue = 0
+            maxValue = minutes.size - 1
+            displayedValues = minutes
+        }
+        binding.closeHourPicker.apply {
+            minValue = 0
+            maxValue = hours.size - 1
+            displayedValues = hours
+        }
+        binding.closeMinutePicker.apply {
+            minValue = 0
+            maxValue = minutes.size - 1
+            displayedValues = minutes
+        }
+        binding.categoryPicker.apply {
+            minValue = 0
+            maxValue = categories.size - 1
+            displayedValues = categories
+        }
 
-        setupPicker(binding.openHourPicker, hours)
-        setupPicker(binding.openMinutePicker, minutes)
-        setupPicker(binding.closeHourPicker, hours)
-        setupPicker(binding.closeMinutePicker, minutes)
-        setupPicker(binding.categoryPicker, categories)
+
 
         // Load arguments if present
         arguments?.let { args ->
@@ -113,26 +133,32 @@ class AddNewBusinessFragment : Fragment() {
         val closingHours = "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}"
         val businessDescription = binding.businessDescEdt.text.toString().trim()
 
-        if (!isInputValid(businessName, businessStreet, businessStreetNumber)) {
-            Toast.makeText(requireContext(), "Please fill in all the fields", Toast.LENGTH_SHORT)
-                .show()
+        if (businessName.isEmpty() || businessStreet.isEmpty() || businessStreetNumber.isEmpty()) {
+            Toast.makeText(requireContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show()
             return
         }
 
         lifecycleScope.launch {
             try {
-                // Debug log: Check values before saving
                 Log.d("AddNewBusinessFragment", "Saving business: $businessName, $businessStreet, $businessCategory, $openingHours, $closingHours")
 
-                // Get current Firebase user
                 val currentUser = auth.currentUser
                 if (currentUser == null) {
                     Toast.makeText(requireContext(), "No user logged in", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
 
-                // Create business map for Firestore
+                val address = "$businessStreetNumber $businessStreet, Tel Aviv, Israel"
+                val coordinates = getCoordinatesFromAddress(address)
+                if (coordinates == null) {
+                    Toast.makeText(requireContext(), "Could not fetch location, try again.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                val (latitude, longitude) = coordinates
+
+                val businessRef = firestore.collection("businesses").document()
                 val businessMap = hashMapOf(
+                    "businessIdFirestore" to businessRef.id,  // ✅ Unique Firestore ID
                     "userId" to currentUser.uid,
                     "name" to businessName,
                     "category" to businessCategory,
@@ -140,25 +166,23 @@ class AddNewBusinessFragment : Fragment() {
                     "streetNumber" to businessStreetNumber,
                     "openingHours" to openingHours,
                     "closingHours" to closingHours,
-                    "description" to businessDescription
+                    "description" to businessDescription,
+                    "latitude" to latitude,  // ✅ Ensure location is stored
+                    "longitude" to longitude
                 )
 
-                // Save to Firestore
                 withContext(Dispatchers.IO) {
-                    firestore.collection("businesses")
-                        .add(businessMap)
-                        .await()
+                    businessRef.set(businessMap).await()
                 }
 
-                Log.d("AddNewBusinessFragment", "com.example.gis_test.data.Business saved successfully")
+                Log.d("AddNewBusinessFragment", "Business saved successfully")
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "com.example.gis_test.data.Business saved successfully!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Business saved successfully!", Toast.LENGTH_SHORT).show()
                     findNavController().popBackStack()
                 }
 
             } catch (e: Exception) {
-                // Show error message
                 Log.e("AddNewBusinessFragment", "Error saving business", e)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Failed to save business.", Toast.LENGTH_SHORT).show()
@@ -167,14 +191,33 @@ class AddNewBusinessFragment : Fragment() {
         }
     }
 
-    private fun setupPicker(picker: android.widget.NumberPicker, values: Array<String>) {
-        picker.minValue = 0
-        picker.maxValue = values.size - 1
-        picker.displayedValues = values
-    }
+    private suspend fun getCoordinatesFromAddress(address: String): Pair<Double, Double>? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val apiKey = "YOUR_GOOGLE_MAPS_API_KEY"
+                val url = "https://maps.googleapis.com/maps/api/geocode/json?address=${address.replace(" ", "+")}&key=$apiKey"
+                val request = Request.Builder().url(url).build()
+                val response = client.newCall(request).execute()
 
-    private fun isInputValid(vararg inputs: String): Boolean {
-        return inputs.all { it.isNotBlank() }
+                response.body?.string()?.let { responseBody ->
+                    val jsonResponse = JSONObject(responseBody)
+                    val results = jsonResponse.getJSONArray("results")
+
+                    if (results.length() > 0) {
+                        val location = results.getJSONObject(0)
+                            .getJSONObject("geometry")
+                            .getJSONObject("location")
+
+                        val lat = location.getDouble("lat")
+                        val lon = location.getDouble("lng")
+                        return@withContext Pair(lat, lon)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("Geocoding", "Error: ${e.message}")
+            }
+            return@withContext null
+        }
     }
 
     override fun onDestroyView() {

@@ -13,15 +13,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.GotYourBack.R
 import com.example.GotYourBack.databinding.BusinessSignupPageBinding
-import com.example.gis_test.data.AppDatabase
-import com.example.gis_test.data.Business
-import com.example.gis_test.data.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -42,11 +41,18 @@ class BusinessSignUpFragment : Fragment() {
     private var _binding: BusinessSignupPageBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var categories: Array<String>
-    private lateinit var hours: Array<String>
-    private lateinit var minutes: Array<String>
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
+    private val client = OkHttpClient() // HTTP client for geocoding
+
+
+    private val categories = arrayOf(
+        "Restaurant", "Coffee place", "Beauty salon", "Grocery store",
+        "Clothes store", "Book store", "Gym", "Pharmacy",
+        "Hardware store", "Jewelry store"
+    )
+    private val hours = (0..23).map { it.toString().padStart(2, '0') }.toTypedArray()
+    private val minutes = arrayOf("00", "15", "30", "45")
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,28 +60,17 @@ class BusinessSignUpFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = BusinessSignupPageBinding.inflate(inflater, container, false)
+
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupInitialData()
         setupUI()
         setupListeners()
     }
 
-    private fun setupInitialData() {
-        categories = arrayOf(
-            "Restaurant", "Coffee place", "Beauty salon", "Grocery store",
-            "Clothes store", "Book store", "Gym", "Pharmacy",
-            "Hardware store", "Jewelry store"
-        )
-        hours = (0..23).map { it.toString().padStart(2, '0') }.toTypedArray()
-        minutes = arrayOf("00", "15", "30", "45")
-    }
-
     private fun setupUI() {
-        // Setup street data
         val streets = loadStreetsFromCsv(requireContext())
         if (streets.isEmpty()) {
             Toast.makeText(requireContext(), "Failed to load streets data.", Toast.LENGTH_SHORT).show()
@@ -85,12 +80,32 @@ class BusinessSignUpFragment : Fragment() {
             ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, streets)
         )
 
-        // Setup pickers
-        setupPicker(binding.openHourPicker, hours)
-        setupPicker(binding.openMinutePicker, minutes)
-        setupPicker(binding.closeHourPicker, hours)
-        setupPicker(binding.closeMinutePicker, minutes)
-        setupPicker(binding.categoryPicker, categories)
+        // Configure pickers directly
+        binding.openHourPicker.apply {
+            minValue = 0
+            maxValue = hours.size - 1
+            displayedValues = hours
+        }
+        binding.openMinutePicker.apply {
+            minValue = 0
+            maxValue = minutes.size - 1
+            displayedValues = minutes
+        }
+        binding.closeHourPicker.apply {
+            minValue = 0
+            maxValue = hours.size - 1
+            displayedValues = hours
+        }
+        binding.closeMinutePicker.apply {
+            minValue = 0
+            maxValue = minutes.size - 1
+            displayedValues = minutes
+        }
+        binding.categoryPicker.apply {
+            minValue = 0
+            maxValue = categories.size - 1
+            displayedValues = categories
+        }
     }
 
     private fun setupListeners() {
@@ -100,108 +115,151 @@ class BusinessSignUpFragment : Fragment() {
     }
 
     private fun signUpBusinessAndUser() {
+        var userName: String? = null
+        var email: String? = null
+        var password: String? = null
+
+        // ✅ Extract user details from arguments
+        arguments?.let {
+            userName = it.getString("userName")
+            email = it.getString("userEmail")
+            password = it.getString("userPassword")
+        }
+
         lifecycleScope.launch {
             try {
-                // ✅ Get user input directly
                 val businessName = binding.businessNameEdt.text.toString().trim()
                 val streetNumber = binding.streetnumberEdt.text.toString().trim()
                 val street = binding.streetNameEdt.text.toString().trim()
-                val category = categories[binding.categoryPicker.value]
-                val openingHours = "${hours[binding.openHourPicker.value]}:${minutes[binding.openMinutePicker.value]}"
-                val closingHours = "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}"
-                val description = binding.businessDescEdt.text.toString().trim()
 
-                // ✅ Validate required fields
-                if (businessName.isEmpty() || street.isEmpty() || streetNumber.isEmpty()) {
+                // ✅ Ensure all fields are filled
+                if (businessName.isEmpty() || street.isEmpty() || streetNumber.isEmpty() ||
+                    userName.isNullOrEmpty() || email.isNullOrEmpty() || password.isNullOrEmpty()) {
                     Toast.makeText(requireContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
 
-                // ✅ Firebase authentication (create user)
-                val userName = arguments?.getString("userName") ?: throw Exception("Username is missing")
-                val userEmail = arguments?.getString("userEmail") ?: throw Exception("Email is missing")
-                val userPassword = arguments?.getString("userPassword") ?: throw Exception("Password is missing")
+                // ✅ Disable button while registering
+                binding.signupBtn.isEnabled = false
+                binding.signupBtn.text = "Registering..."
 
-                val authResult = withContext(Dispatchers.IO) {
-                    auth.createUserWithEmailAndPassword(userEmail, userPassword).await()
-                }
-                val firebaseUserId = authResult.user?.uid ?: throw Exception("Failed to create Firebase user")
+                // ✅ Check if the user already exists in Firestore
+                val existingUser = firestore.collection("users")
+                    .whereEqualTo("email", email)
+                    .get().await()
 
-                Log.d("BusinessSignUpFragment", "Created Firebase user with ID: $firebaseUserId")
+                val userId: String
 
-                // ✅ Save user in local Room database
-                val localUserId = withContext(Dispatchers.IO) {
-                    val userDao = AppDatabase.getDatabase(requireContext()).userDao()
-                    userDao.insertUser(
-                        User(userName = userName, email = userEmail, password = userPassword, fireBaseId = firebaseUserId)
+                if (existingUser.isEmpty) {
+                    // ✅ Register the user in Firebase Authentication
+                    val authResult = auth.createUserWithEmailAndPassword(email!!, password!!).await()
+                    val firebaseUser = authResult.user
+
+                    if (firebaseUser == null) {
+                        Toast.makeText(requireContext(), "User registration failed.", Toast.LENGTH_SHORT).show()
+                        binding.signupBtn.isEnabled = true
+                        binding.signupBtn.text = "Sign Up"
+                        return@launch
+                    }
+
+                    userId = firebaseUser.uid
+
+                    // ✅ Save new user in Firestore with userName
+                    val userRef = firestore.collection("users").document(userId)
+                    val userData = hashMapOf(
+                        "userId" to userId,
+                        "userName" to userName, // ✅ Save user name
+                        "email" to email,
+                        "password" to password // ⚠️ Ideally, do NOT store passwords in plaintext
                     )
+                    userRef.set(userData).await()
+                    Log.d("BusinessSignUpFragment", "User registered: $userName ($email)")
+                } else {
+                    // ✅ Use existing user ID
+                    userId = existingUser.documents[0].id
                 }
 
-                Log.d("BusinessSignUpFragment", "Created local user with ID: $localUserId")
+                // ✅ Get business coordinates
+                val address = "$streetNumber $street, Tel Aviv, Israel"
+                val coordinates = getCoordinatesFromAddress(address)
+                if (coordinates == null) {
+                    Toast.makeText(requireContext(), "Could not fetch location, try again.", Toast.LENGTH_SHORT).show()
+                    binding.signupBtn.isEnabled = true
+                    binding.signupBtn.text = "Sign Up"
+                    return@launch
+                }
+                val (latitude, longitude) = coordinates
 
-                // ✅ Generate Firestore document reference first
-                val businessRef = firestore.collection("businesses").document() // 🔥 Generates a document with an ID
-                val firestoreBusinessId = businessRef.id // ✅ Get Firestore document ID
-
-                // ✅ Save business to Firestore (WITH the Firestore ID included)
-                val businessMap = hashMapOf(
-                    "businessIdFirestore" to firestoreBusinessId, // ✅ Store Firestore ID at creation
-                    "userId" to firebaseUserId,
+                // ✅ Save business to Firestore
+                // ✅ Save business to Firestore with all necessary fields
+                val businessRef = firestore.collection("businesses").document()
+                val businessData = hashMapOf(
+                    "businessIdFirestore" to businessRef.id,
                     "name" to businessName,
-                    "category" to category,
+                    "category" to categories[binding.categoryPicker.value], // ✅ Ensure category is stored
                     "street" to street,
                     "streetNumber" to streetNumber,
-                    "openingHours" to openingHours,
-                    "closingHours" to closingHours,
-                    "description" to description
+                    "latitude" to latitude,
+                    "longitude" to longitude,
+                    "openingHours" to "${hours[binding.openHourPicker.value]}:${minutes[binding.openMinutePicker.value]}", // ✅ Opening hours
+                    "closingHours" to "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}", // ✅ Closing hours
+                    "description" to binding.businessDescEdt.text.toString().trim(), // ✅ Business description
+                    "userId" to userId // ✅ Link business to user
                 )
 
-                withContext(Dispatchers.IO) {
-                    businessRef.set(businessMap).await() // ✅ Set Firestore document WITH ID
-                }
+// ✅ Save business data to Firestore
+                businessRef.set(businessData).await()
 
-                Log.d("BusinessSignUpFragment", "Saved business to Firestore with ID: $firestoreBusinessId")
 
-                // ✅ Save business in Room database
-                val business = Business(
-                    businessIdFirestore = firestoreBusinessId, // ✅ Now it's correctly stored
-                    userId = localUserId.toString(),
-                    name = businessName,
-                    category = category,
-                    street = street,
-                    streetNumber = streetNumber,
-                    openingHours = openingHours,
-                    closingHours = closingHours,
-                    description = description
-                )
+                Log.d("BusinessSignUpFragment", "Business saved: $businessName → ($latitude, $longitude)")
 
-                withContext(Dispatchers.IO) {
-                    AppDatabase.getDatabase(requireContext()).businessDao().insertBusiness(business)
-                }
-
-                Log.d("BusinessSignUpFragment", "Saved business to Room with Firestore ID: $firestoreBusinessId")
-
-                // ✅ Navigate to login
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Business registered successfully!", Toast.LENGTH_SHORT).show()
-                    findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
-                }
+                Toast.makeText(requireContext(), "Business registered successfully!", Toast.LENGTH_SHORT).show()
+                findNavController().navigate(R.id.action_secondSignUpFragment_to_loginPageFragment)
 
             } catch (e: Exception) {
-                Log.e("BusinessSignUpFragment", "Error during business registration", e)
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Registration failed: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+                Log.e("BusinessSignUpFragment", "Error registering user or business", e)
+                Toast.makeText(requireContext(), "Registration failed: ${e.message}", Toast.LENGTH_LONG).show()
+            } finally {
+                binding.signupBtn.isEnabled = true
+                binding.signupBtn.text = "Sign Up"
             }
         }
     }
 
 
 
-    private fun setupPicker(picker: android.widget.NumberPicker, values: Array<String>) {
-        picker.minValue = 0
-        picker.maxValue = values.size - 1
-        picker.displayedValues = values
+
+
+    private suspend fun getCoordinatesFromAddress(address: String): Pair<Double, Double>? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val apiKey = "AIzaSyCQeEvjm6akDFJ78wVUY6pqG1tuBUp1Yyw" // 🔴 Replace with your actual API key
+                val url = "https://maps.googleapis.com/maps/api/geocode/json?address=${address.replace(" ", "+")}&key=$apiKey"
+                val request = Request.Builder().url(url).build()
+                val response = client.newCall(request).execute()
+
+                response.body?.string()?.let { responseBody ->
+                    val jsonResponse = org.json.JSONObject(responseBody)
+                    val results = jsonResponse.getJSONArray("results")
+
+                    if (results.length() > 0) {
+                        val location = results.getJSONObject(0)
+                            .getJSONObject("geometry")
+                            .getJSONObject("location")
+
+                        val lat = location.getDouble("lat")
+                        val lon = location.getDouble("lng")
+                        Log.d("Geocoding", "Geocoded: $address → $lat, $lon")
+                        return@withContext Pair(lat, lon)
+                    } else {
+                        Log.e("Geocoding", "No results for $address")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("Geocoding", "Google Geocoding error: ${e.message}")
+            }
+            return@withContext null
+        }
     }
 
     override fun onDestroyView() {
