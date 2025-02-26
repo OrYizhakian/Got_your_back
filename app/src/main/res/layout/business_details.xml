@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/gradient_background"
     android:orientation="vertical"
     android:padding="30dp"
     tools:context="com.example.gis_test.ui.BusinessDetailsFragment">
@@ -14,6 +15,8 @@
         android:layout_height="wrap_content"
         android:textStyle="bold"
         android:text="Business Name"
+        android:textSize="40sp"
+        android:textColor="@color/mainHeader"
         android:visibility="visible"
         android:layout_marginTop="20dp"/>
 
@@ -30,6 +33,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Category"
+        android:textSize="30sp"
+        android:textColor="@color/labels"
         android:visibility="visible" />
 
     <EditText
@@ -45,6 +50,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Address"
+        android:textSize="30sp"
+        android:textColor="@color/labels"
         android:visibility="visible" />
 
     <EditText
@@ -61,6 +68,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Opening Hours"
+        android:textSize="30sp"
+        android:textColor="@color/labels"
         android:visibility="visible" />
 
     <EditText
@@ -77,6 +86,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Description"
+        android:textSize="30sp"
+        android:textColor="@color/labels"
         android:visibility="visible" />
 
     <EditText
@@ -91,6 +102,9 @@
         android:id="@+id/editButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:backgroundTint="@color/paragraphText"
         android:text="Edit"
         android:visibility="visible" />
 

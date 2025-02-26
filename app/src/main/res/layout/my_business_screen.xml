@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/gradient_background"
     android:orientation="vertical"
-    android:padding="20dp"
-    android:background="@color/white">
+    android:padding="20dp">
 
     <!-- Back Button -->
     <Button
@@ -13,8 +12,9 @@
         android:layout_width="80dp"
         android:layout_height="50dp"
         android:layout_gravity="end"
-        android:backgroundTint="@color/darkblue"
-        android:text="Back"
+        android:layout_marginTop="30dp"
+        android:backgroundTint="@color/paragraphText"
+        android:text="@string/back"
         android:textColor="@color/white" />
 
     <!-- Empty List Message -->
@@ -22,13 +22,13 @@
         android:id="@+id/businessListEmptyMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="No businesses found."
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:text="@string/no_businesses_found"
+        android:textAlignment="center"
         android:textColor="@color/darkblue"
         android:textSize="18sp"
-        android:textAlignment="center"
-        android:visibility="gone"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp" />
+        android:visibility="gone" />
 
     <!-- RecyclerView for displaying businesses -->
     <androidx.recyclerview.widget.RecyclerView
@@ -38,16 +38,16 @@
         android:layout_weight="1"
         android:clipToPadding="false"
         android:padding="8dp" />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddBusiness"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/baseline_add_box_24"
-        android:background="@color/darkblue"
-        android:backgroundTint="@color/white"
-        android:layout_marginBottom="30dp"
         android:layout_gravity="end"
-        android:layout_marginEnd="30dp"
-        android:id="@+id/fabAddBusiness"
+        android:layout_marginBottom="70dp"
+        android:backgroundTint="@color/paragraphText"
+        android:contentDescription="@string/add_a_new_business"
+        android:src="@drawable/baseline_add_box_24"
 
         />
 

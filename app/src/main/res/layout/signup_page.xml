@@ -2,30 +2,38 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/gradient_background"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="16dp"
-    android:orientation="vertical"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ui.UserSignUpFragment">
+    android:orientation="vertical">
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/black"
+        android:textColor="@color/mainHeader"
         android:textSize="35sp"
         android:text="@string/sign_up"
+        android:textStyle="bold"
+
         android:layout_marginTop="200dp"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/user_name"
+        android:textColor="@color/labels"
         android:textSize="25sp"
         />
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:boxStrokeColor="@color/paragraphText"
+        app:cursorColor="@color/paragraphText"
+        app:hintTextColor="@color/paragraphText"
         style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
 
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/username_edt"
+        android:backgroundTint="@color/textInputBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:autofillHints="username"
@@ -39,14 +47,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/email"
+        android:textColor="@color/labels"
         android:textSize="25sp"
         />
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:boxStrokeColor="@color/paragraphText"
+        app:cursorColor="@color/paragraphText"
+        app:hintTextColor="@color/paragraphText"
         style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
+
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/email_edt"
+        android:backgroundTint="@color/textInputBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:autofillHints="emailAddress"
@@ -60,13 +74,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/password"
+        android:textColor="@color/labels"
         android:textSize="25sp"/>
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:boxStrokeColor="@color/paragraphText"
+        app:cursorColor="@color/paragraphText"
+        app:hintTextColor="@color/paragraphText"
         style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
+
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/password_edt"
+        android:backgroundTint="@color/textInputBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:autofillHints="password"
@@ -81,6 +101,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="@string/Continue_btn"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:backgroundTint="@color/paragraphText"
         android:textSize="20sp"
         android:id="@+id/continue_btn"/>
 

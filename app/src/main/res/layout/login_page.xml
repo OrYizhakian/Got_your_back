@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:focusable="true"
     android:focusableInTouchMode="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
     android:orientation="vertical"
+    android:background="@drawable/gradient_background"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.gis_test.ui.LoginPageFragment">
 
@@ -13,24 +15,30 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/login"
+        android:textStyle="bold"
         android:textSize="35sp"
         android:layout_marginTop="200dp"
-        android:textColor="@color/black"/>
+        android:textColor="@color/mainHeader"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/email"
+        android:textColor="@color/labels"
         android:textSize="25sp"
         />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:boxStrokeColor="@color/paragraphText"
+        app:cursorColor="@color/paragraphText"
+        app:hintTextColor="@color/paragraphText"
         style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/email_edt"
+             android:backgroundTint="@color/textInputBackground"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:imeOptions="actionDone"
@@ -46,15 +54,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/password"
+        android:textColor="@color/labels"
         android:textSize="25sp"/>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:boxStrokeColor="@color/paragraphText"
+        app:cursorColor="@color/paragraphText"
+        app:hintTextColor="@color/paragraphText"
         style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/password_edt"
+            android:backgroundTint="@color/textInputBackground"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:imeOptions="actionDone"
@@ -71,6 +84,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="@string/login"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:backgroundTint="@color/paragraphText"
         android:textSize="20sp"
         android:id="@+id/login_btn"/>
 
@@ -78,6 +94,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/if_you_haven_t_signed_up_yet"
+        android:textColor="@color/paragraphText"
         android:layout_marginTop="30dp"
         android:textSize="15sp"/>
 
@@ -85,6 +102,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/sign_up"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/paragraphText"
         android:textSize="20sp"
         android:id="@+id/signup_btn"/>
 

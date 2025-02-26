@@ -2,26 +2,30 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/gradient_background"
     android:padding="16dp"
     android:orientation="vertical"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ui.MainScreenFragment"
     >
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/app_title"
-        android:textSize="35sp"
+        android:textSize="45sp"
+        android:textStyle="bold"
         android:gravity="center"
         android:layout_marginTop="200dp"
-        android:textColor="@color/black"
+        android:textColor="@color/mainHeader"
         android:padding="15dp"/>
 
     <Button
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:text="@string/sign_in_btn"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:backgroundTint="@color/paragraphText"
         android:id="@+id/singing_button"
         android:layout_gravity="center"
         android:layout_margin="10dp"
@@ -30,6 +34,9 @@
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:text="@string/map_btn"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:backgroundTint="@color/paragraphText"
         android:id="@+id/map_button"
         android:layout_gravity="center"/>
 

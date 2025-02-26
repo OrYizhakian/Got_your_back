@@ -7,6 +7,15 @@
     <color name="darkblue">#FF123456</color>
     <color name="lightblue">#FFD0E3F5</color>
 
+    <color name="textInputBackground">#D8DDB6</color>
+    <color name="textInputBorders">#6A7543</color>
+    <color name="labels">#4F5733</color>
+    <color name="businessDetails">#252D13</color>
+    <color name="mainHeader">#3D4524</color>
+    <color name="paragraphText">#5D6532</color>
+    <color name="backgroundTop">#737D4C</color>
+    <color name="backgroundBottom">#A6B48B</color>
+
     <style name="AppTheme.Picker" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:textColorPrimary">@android:color/black</item>
 

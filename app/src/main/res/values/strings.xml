@@ -26,4 +26,7 @@
     <string name="to">to</string>
     <string name="enter_street_name">Enter street name</string>
     <string name="closing_hours">Closing hours:</string>
+    <string name="add_a_new_business">Add a new business</string>
+    <string name="back">Back</string>
+    <string name="no_businesses_found">No businesses found.</string>
 </resources>

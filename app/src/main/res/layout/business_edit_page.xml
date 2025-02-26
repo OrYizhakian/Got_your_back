@@ -2,10 +2,11 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="16dp"
     android:orientation="vertical"
+    android:background="@drawable/gradient_background"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ui.SecondSignUpFragment"
     tools:ignore="ScrollViewCount">
 
 
@@ -28,6 +29,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
+                android:textColor="@color/labels"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/business_name"
@@ -38,9 +40,14 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:boxStrokeColor="@color/paragraphText"
+                app:cursorColor="@color/paragraphText"
+                app:hintTextColor="@color/paragraphText"
                 style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
+
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/businessName_edt"
+                    android:backgroundTint="@color/textInputBackground"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:autofillHints="username"
@@ -57,6 +64,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
+                android:textColor="@color/labels"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/category"
@@ -80,6 +88,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
+                android:textColor="@color/labels"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/street"
@@ -90,9 +99,14 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:boxStrokeColor="@color/paragraphText"
+                app:cursorColor="@color/paragraphText"
+                app:hintTextColor="@color/paragraphText"
                 style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
+
                 <AutoCompleteTextView
                     android:id="@+id/streetName_edt"
+                    android:backgroundTint="@color/textInputBackground"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/enter_street_name"
@@ -110,6 +124,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
+                android:textColor="@color/labels"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/street_number"
@@ -120,9 +135,14 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:boxStrokeColor="@color/paragraphText"
+                app:cursorColor="@color/paragraphText"
+                app:hintTextColor="@color/paragraphText"
                 style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
+
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/streetnumber_edt"
+                    android:backgroundTint="@color/textInputBackground"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/enter_street_number"
@@ -139,6 +159,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
+                android:textColor="@color/labels"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/opening_hours"
@@ -172,6 +193,7 @@
             android:orientation="horizontal">
 
             <TextView
+                android:textColor="@color/labels"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/closing_hours"
@@ -197,12 +219,14 @@
         </LinearLayout>
         <!-- שדה תיאור העסק -->
         <TextView
+            android:textColor="@color/labels"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/description"
             android:textSize="18sp" />
         <EditText
             android:id="@+id/businessDescEdt"
+            android:backgroundTint="@color/textInputBackground"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/textboxbackground"
@@ -211,11 +235,15 @@
             android:textSize="16sp"
             android:textColor="@color/black" />
 
+        <!-- כפתור הרשמה -->
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="update"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:backgroundTint="@color/paragraphText"
             android:textSize="20sp"
             android:id="@+id/update_btn" />
         <Space
