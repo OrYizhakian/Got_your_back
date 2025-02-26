@@ -1,22 +1,46 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.MapFragment">
 
-    <!-- WebView for displaying the Leaflet map -->
-    <WebView
-        android:id="@+id/mapWebView"
+    <!-- Google Maps Fragment -->
+    <fragment
+        android:id="@+id/map_fragment"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"/>
 
-    <!-- Loading indicator -->
-    <ProgressBar
-        android:id="@+id/loadingProgressBar"
+    <!-- Parent Layout for Buttons -->
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:visibility="gone" />
+        android:orientation="vertical"
+        android:layout_gravity="bottom|end"
+        android:padding="16dp">
 
-</RelativeLayout>
+        <!-- Theme Button (Top) -->
+        <Button
+            android:id="@+id/theme_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Change Theme"
+            android:backgroundTint="@color/darkblue"
+            android:textColor="@android:color/white"
+            android:elevation="4dp"
+            android:layout_marginBottom="12dp"/> <!-- ✅ Added margin to separate buttons -->
+
+        <!-- Filter Button (Below) -->
+        <Button
+            android:id="@+id/filter_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Filter"
+            android:backgroundTint="@color/darkblue"
+            android:textColor="@android:color/white"
+            android:elevation="4dp"
+            android:layout_marginBottom="70dp"/>
+
+    </LinearLayout>
+
+</FrameLayout>
