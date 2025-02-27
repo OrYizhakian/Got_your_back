@@ -1,5 +1,7 @@
 package com.example.gis_test.ui
 
+import android.R
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,19 +10,18 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.GotYourBack.databinding.BusinessEditPageBinding
 import com.example.gis_test.data.Business
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 class BusinessUpdateFragment : Fragment() {
 
     private var _binding: BusinessEditPageBinding? = null
     private val binding get() = _binding!!
     private var business: Business? = null
-    private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -44,7 +45,25 @@ class BusinessUpdateFragment : Fragment() {
         setupListeners()
     }
 
+    private fun loadStreetsFromCsv(context: Context): List<String> {
+        return try {
+            context.assets.open("TelAvivStreets.csv").use { inputStream ->
+                BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                    reader.lineSequence().toList()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
     private fun populateFields(business: Business) {
+        val streets = loadStreetsFromCsv(requireContext())
+
+        binding.streetNameEdt.setAdapter(
+            ArrayAdapter(requireContext(), R.layout.simple_dropdown_item_1line, streets)
+        )
         binding.businessNameEdt.setText(business.name)
         binding.streetNameEdt.setText(business.street)
         binding.streetnumberEdt.setText(business.streetNumber)

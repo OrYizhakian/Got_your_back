@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/gradient_background"
     android:orientation="vertical"
     android:padding="30dp"
     tools:context="com.example.gis_test.ui.BusinessDetailsFragment">
@@ -12,17 +13,13 @@
         android:id="@+id/businessNameText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textStyle="bold"
         android:text="Business Name"
-        android:visibility="visible"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:textColor="@color/textColor"
         android:layout_marginTop="20dp"/>
 
-    <EditText
-        android:id="@+id/businessName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Business Name"
-        android:visibility="gone" />
+
 
     <!-- com.example.gis_test.data.Business Category -->
     <TextView
@@ -30,14 +27,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Category"
+        android:textSize="30sp"
+        android:textColor="@color/textColor"
         android:visibility="visible" />
 
-    <EditText
-        android:id="@+id/businessCategory"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Category"
-        android:visibility="gone" />
+
 
     <!-- com.example.gis_test.data.Business Address -->
     <TextView
@@ -45,14 +39,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Address"
+        android:textSize="30sp"
+        android:textColor="@color/textColor"
         android:visibility="visible" />
 
-    <EditText
-        android:id="@+id/businessAddress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Address"
-        android:visibility="gone" />
+
 
 
     <!-- com.example.gis_test.data.Business Hours -->
@@ -61,14 +52,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Opening Hours"
+        android:textSize="30sp"
+        android:textColor="@color/textColor"
         android:visibility="visible" />
 
-    <EditText
-        android:id="@+id/businessHours"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Opening Hours"
-        android:visibility="gone" />
+
 
 
     <!-- com.example.gis_test.data.Business Description -->
@@ -77,41 +65,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Description"
+        android:textSize="30sp"
+        android:textColor="@color/textColor"
         android:visibility="visible" />
 
-    <EditText
-        android:id="@+id/businessDescription"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Description"
-        android:visibility="gone" />
+
 
     <!-- Buttons -->
     <Button
         android:id="@+id/editButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/textColor"
+        android:textStyle="bold"
+        android:backgroundTint="@color/paragraphText"
         android:text="Edit"
         android:visibility="visible" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/saveButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Save"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/cancelButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Cancel"
-            android:visibility="gone" />
-    </LinearLayout>
 
 </LinearLayout>
+

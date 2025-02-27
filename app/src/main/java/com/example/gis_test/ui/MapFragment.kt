@@ -219,10 +219,10 @@
                 "Grocery store" -> Color.GREEN
                 "Clothes store" -> Color.BLUE
                 "Book store" -> Color.parseColor("#87CEEB") // Sky Blue
-                "Gym" -> Color.YELLOW
+                "Gym" -> Color.GRAY
                 "Pharmacy" -> Color.CYAN
                 "Hardware store" -> Color.parseColor("#8A2BE2") // Violet
-                "Jewelry store" -> Color.MAGENTA
+                "Jewelry store" -> Color.parseColor("#FFD700") // Gold
                 else -> Color.DKGRAY
             }
 

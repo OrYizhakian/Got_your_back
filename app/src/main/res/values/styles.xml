@@ -1,0 +1,15 @@
+<resources>
+
+    <!-- Theme Overlay for Popup Menu -->
+    <style name="PopupMenuStyle" parent="ThemeOverlay.AppCompat.Light">
+        <item name="android:itemTextAppearance">@style/PopupMenuText</item>
+        <item name="android:popupBackground">@color/cardBackground</item> <!-- ✅ Menu background -->
+    </style>
+
+    <!-- Style for Menu Item Text -->
+    <style name="PopupMenuText" parent="TextAppearance.AppCompat">
+        <item name="android:textColor">@color/textColor</item> <!-- ✅ Menu text color -->
+        <item name="android:textSize">16sp</item> <!-- ✅ Adjust text size -->
+    </style>
+
+</resources>

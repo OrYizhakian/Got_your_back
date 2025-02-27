@@ -84,6 +84,7 @@ dependencies {
     implementation ("com.google.android.gms:play-services-maps:17.0.0")
 
     implementation ("com.google.maps.android:android-maps-utils:2.2.5")
+    implementation ("com.airbnb.android:lottie:6.0.0")
 
     implementation( "com.squareup.okhttp3:okhttp:4.10.0")
 

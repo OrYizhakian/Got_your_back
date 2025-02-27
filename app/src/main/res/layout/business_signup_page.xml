@@ -2,10 +2,11 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="16dp"
     android:orientation="vertical"
+    android:background="@drawable/gradient_background"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.example.gis_test.ui.BusinessSignUpFragment"
     tools:ignore="ScrollViewCount">
 
 
@@ -28,6 +29,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
+                android:textColor="@color/borderColor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/business_name"
@@ -38,15 +40,21 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:boxStrokeColor="@color/paragraphText"
+                app:cursorColor="@color/paragraphText"
+                app:hintTextColor="@color/paragraphText"
                 style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
+
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/businessName_edt"
+                    android:backgroundTint="@color/textInputBackground"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:autofillHints="username"
                     android:hint="@string/enter_business_name"
                     android:inputType="text"
-                    android:minHeight="48dp"
+                    android:minHeight="40dp"
+                    android:textSize="18sp"
                     android:textColorHint="@color/hints" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
@@ -57,6 +65,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
+                android:textColor="@color/borderColor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/category"
@@ -80,6 +89,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
+                android:textColor="@color/borderColor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/street"
@@ -90,7 +100,11 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:boxStrokeColor="@color/paragraphText"
+                app:cursorColor="@color/paragraphText"
+                app:hintTextColor="@color/paragraphText"
                 style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
+
                 <AutoCompleteTextView
                     android:id="@+id/streetName_edt"
                     android:layout_width="match_parent"
@@ -99,8 +113,12 @@
                     android:importantForAutofill="no"
                     android:inputType="text"
                     android:minHeight="48dp"
+                    android:textSize="16sp"
                     android:textColorHint="@color/hints"
-                    android:completionThreshold="1"/>
+                    android:completionThreshold="3"
+                    android:background="@color/textInputBackground"
+                    android:paddingTop="10dp"/>
+
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
@@ -110,6 +128,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
+                android:textColor="@color/borderColor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/street_number"
@@ -120,15 +139,21 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:boxStrokeColor="@color/paragraphText"
+                app:cursorColor="@color/paragraphText"
+                app:hintTextColor="@color/paragraphText"
                 style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense">
+
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/streetnumber_edt"
+                    android:backgroundTint="@color/textInputBackground"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/enter_street_number"
                     android:importantForAutofill="no"
                     android:inputType="number"
-                    android:minHeight="48dp"
+                    android:minHeight="40dp"
+                    android:textSize="18sp"
                     android:textColorHint="@color/hints" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
@@ -139,6 +164,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
+                android:textColor="@color/borderColor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/opening_hours"
@@ -172,6 +198,7 @@
             android:orientation="horizontal">
 
             <TextView
+                android:textColor="@color/borderColor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/closing_hours"
@@ -197,27 +224,21 @@
         </LinearLayout>
         <!-- שדה תיאור העסק -->
         <TextView
+            android:textColor="@color/borderColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/description"
             android:textSize="18sp" />
-        <com.google.android.material.textfield.TextInputLayout
+        <EditText
+            android:id="@+id/businessDescEdt"
+            android:backgroundTint="@color/textInputBackground"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox.Dense"
-            android:hint="@string/describe_your_business">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/businessDescEdt"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="top|start"
-                android:inputType="textMultiLine"
-                android:minHeight="120dp"
-                android:padding="12dp"
-                android:textColor="@color/black"
-                android:textSize="16sp" />
-        </com.google.android.material.textfield.TextInputLayout>
+            android:background="@drawable/textboxbackground"
+            android:padding="12dp"
+            android:hint="@string/describe_your_business"
+            android:textSize="16sp"
+            android:textColor="@color/black" />
 
         <!-- כפתור הרשמה -->
         <Button
@@ -225,6 +246,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="@string/sign_up"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:backgroundTint="@color/paragraphText"
             android:textSize="20sp"
             android:id="@+id/signup_btn" />
         <Space

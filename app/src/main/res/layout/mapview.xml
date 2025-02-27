@@ -16,9 +16,10 @@
         android:id="@+id/burger_button"
         android:layout_width="56dp"
         android:layout_height="56dp"
-        android:layout_margin="16dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/icons8_menu"
+        android:layout_marginTop="15dp"
+        android:layout_marginStart="3dp"
+        android:src="@drawable/icons8_menu_24"
         android:contentDescription="Menu"
         android:layout_gravity="top|start" />
 </FrameLayout>

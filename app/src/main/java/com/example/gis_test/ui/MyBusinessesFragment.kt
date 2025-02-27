@@ -6,14 +6,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.GotYourBack.R
-import com.example.gis_test.data.AppDatabase
 import com.example.gis_test.data.Business
 import com.example.GotYourBack.databinding.MyBusinessScreenBinding
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -27,7 +30,6 @@ class MyBusinessesFragment : Fragment() {
     private lateinit var adapter: BusinessAdapter
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,11 +48,19 @@ class MyBusinessesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val firebaseUserId = arguments?.getString("userId") ?: auth.currentUser?.uid
+        val firebaseUser = auth.currentUser
+        val firebaseUserId = firebaseUser?.uid
+        val email = firebaseUser?.email ?: ""
 
         if (firebaseUserId != null) {
             Log.d("MyBusinessesFragment", "Fetching businesses for user: $firebaseUserId")
-            loadBusinesses(firebaseUserId)
+
+            // ✅ If the user is an admin, load all businesses
+            if (email.endsWith("@admin.com")) {
+                loadBusinesses(adminMode = true)
+            } else {
+                loadBusinesses(adminMode = false, userId = firebaseUserId)
+            }
         } else {
             Log.e("MyBusinessesFragment", "No user ID found")
             Toast.makeText(requireContext(), "Error: No user ID found", Toast.LENGTH_SHORT).show()
@@ -87,11 +97,11 @@ class MyBusinessesFragment : Fragment() {
     }
 
     private fun setupButtons() {
-        binding.fabAddBusiness.setOnClickListener {
-            val userId = arguments?.getString("userId") ?: auth.currentUser?.uid
+        binding.addBusinessFab.setOnClickListener {
+            val userId = auth.currentUser?.uid
             if (userId != null) {
                 val bundle = Bundle().apply {
-                    putString("userId", userId) // ✅ Fix: Use putString() instead of putLong()
+                    putString("userId", userId)
                 }
                 findNavController().navigate(
                     R.id.action_myBusinessesFragment_to_addNewBusinessFragment,
@@ -105,17 +115,20 @@ class MyBusinessesFragment : Fragment() {
         }
     }
 
-    private fun loadBusinesses(userId: String) {
+    private fun loadBusinesses(adminMode: Boolean, userId: String? = null) {
         lifecycleScope.launch {
             try {
                 val businesses = mutableListOf<Business>()
 
-                val snapshot = withContext(Dispatchers.IO) {
+                val query = if (adminMode) {
+                    // ✅ Admin: Fetch all businesses
                     firestore.collection("businesses")
-                        .whereEqualTo("userId", userId)  // ✅ Fetch only businesses for logged-in user
-                        .get()
-                        .await()
+                } else {
+                    // 👤 Regular User: Fetch only their businesses
+                    firestore.collection("businesses").whereEqualTo("userId", userId)
                 }
+
+                val snapshot = withContext(Dispatchers.IO) { query.get().await() }
 
                 Log.d("MyBusinessesFragment", "Firestore returned ${snapshot.documents.size} businesses.")
 
@@ -135,8 +148,8 @@ class MyBusinessesFragment : Fragment() {
                         openingHours = document.getString("openingHours") ?: "00:00",
                         closingHours = document.getString("closingHours") ?: "00:00",
                         description = document.getString("description") ?: "",
-                        latitude = lat,                // <––– use them here
-                        longitude = lng                // <––– use them here
+                        latitude = lat,
+                        longitude = lng
                     )
                 }
 

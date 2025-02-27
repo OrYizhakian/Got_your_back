@@ -42,7 +42,11 @@
             app:popExitAnim="@anim/to_bottom" />
         <action
             android:id="@+id/action_loginPageFragment_to_myBusinessesFragment"
-            app:destination="@id/myBusinessesFragment" />
+            app:destination="@id/myBusinessesFragment"
+            app:enterAnim="@anim/from_right"
+            app:exitAnim="@anim/to_left"
+            app:popEnterAnim="@anim/from_left"
+            app:popExitAnim="@anim/to_right" />
     </fragment>
 
     <fragment
@@ -85,18 +89,25 @@
         android:label="MyBusinessesFragment" >
         <action
             android:id="@+id/action_myBusinessesFragment_to_mapFragment2"
-            app:destination="@id/mapFragment2" />
+            app:destination="@id/mapFragment2"
+            app:enterAnim="@anim/from_left"
+            app:exitAnim="@anim/to_right"
+            app:popEnterAnim="@anim/from_right"
+            app:popExitAnim="@anim/to_left" />
         <action
             android:id="@+id/action_myBusinessesFragment_to_addNewBusinessFragment"
-            app:destination="@id/addNewBusinessFragment" />
-        <action
-            android:id="@+id/action_myBusinessesFragment_to_loginPageFragment"
-            app:destination="@id/loginPageFragment"
-            app:popUpTo="@id/loginPageFragment"
-            app:popUpToInclusive="true" />
+            app:destination="@id/addNewBusinessFragment"
+            app:enterAnim="@anim/from_bottom"
+            app:exitAnim="@anim/to_top"
+            app:popEnterAnim="@anim/from_top"
+            app:popExitAnim="@anim/to_bottom" />
         <action
             android:id="@+id/action_myBusinessesFragment_to_businessDetailsFragment2"
-            app:destination="@id/businessDetailsFragment2" />
+            app:destination="@id/businessDetailsFragment2"
+            app:enterAnim="@anim/from_right"
+            app:exitAnim="@anim/to_left"
+            app:popEnterAnim="@anim/from_left"
+            app:popExitAnim="@anim/to_right" />
     </fragment>
 
     <fragment
@@ -106,6 +117,10 @@
         <action
             android:id="@+id/action_addNewBusinessFragment_to_myBusinessesFragment"
             app:destination="@id/myBusinessesFragment"
+            app:enterAnim="@anim/from_left"
+            app:exitAnim="@anim/to_right"
+            app:popEnterAnim="@anim/from_right"
+            app:popExitAnim="@anim/to_left"
             app:popUpTo="@id/myBusinessesFragment"
             app:popUpToInclusive="true" />
     </fragment>
@@ -116,7 +131,11 @@
         android:label="BusinessUpdateFragment" >
         <action
             android:id="@+id/action_businessUpdateFragment_to_businessDetailsFragment2"
-            app:destination="@id/businessDetailsFragment2" />
+            app:destination="@id/businessDetailsFragment2"
+            app:enterAnim="@anim/from_bottom"
+            app:exitAnim="@anim/to_top"
+            app:popEnterAnim="@anim/from_top"
+            app:popExitAnim="@anim/to_bottom" />
     </fragment>
     <fragment
         android:id="@+id/businessDetailsFragment2"
@@ -125,7 +144,11 @@
         tools:layout="@layout/business_details" >
         <action
             android:id="@+id/action_businessDetailsFragment2_to_businessUpdateFragment"
-            app:destination="@id/businessUpdateFragment" />
+            app:destination="@id/businessUpdateFragment"
+            app:enterAnim="@anim/from_top"
+            app:exitAnim="@anim/to_bottom"
+            app:popEnterAnim="@anim/from_bottom"
+            app:popExitAnim="@anim/to_top" />
     </fragment>
 
 </navigation>

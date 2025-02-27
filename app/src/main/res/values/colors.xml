@@ -6,9 +6,28 @@
     <color name="blue">#FFA1C6EA</color>
     <color name="darkblue">#FF123456</color>
     <color name="lightblue">#FFD0E3F5</color>
+    <color name="buttonColor">#44624A</color>
+    <color name="buttonTextColor">#FFFFFF</color>
+    <color name="textInputBackground">#D8DDB6</color>
+    <color name="textInputBorders">#6A7543</color>
+    <color name="labels">#4F5733</color>
+    <color name="businessDetails">#252D13</color>
+    <color name="mainHeader">#3D4524</color>
+    <color name="paragraphText">#5D6532</color>
+    <color name="backgroundTop">#737D4C</color>
+    <color name="backgroundBottom">#A6B48B</color>
+    <color name="backgroundColor">#2E3B2F</color>
+    <color name="cardBackground">#4A5A44</color>
+    <color name="textColor">#E5E5E5</color>
+    <color name="primaryButton">#D4AF37</color>
+    <color name="secondaryButton">#556B2F</color>
+    <color name="fabColor">#A67C00</color>
+    <color name="borderColor">#C0C0C0</color>
+
+
 
     <style name="AppTheme.Picker" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:textColorPrimary">@android:color/black</item>
+        <item name="android:textColorPrimary">@color/backgroundBottom</item>
 
     </style>
 

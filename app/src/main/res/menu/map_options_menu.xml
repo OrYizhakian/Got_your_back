@@ -1,11 +1,17 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item
         android:id="@+id/menu_change_theme"
         android:title="Change Theme"
-        android:icon="@drawable/icons8_palette"/>
+        android:icon="@drawable/icons8_palette"
+        app:showAsAction="always"
+        app:iconTint="@color/fabColor"/> <!-- ✅ Set icon color from colors.xml -->
 
     <item
-        android:id ="@+id/menu_filter"
+        android:id="@+id/menu_filter"
         android:title="Filter Businesses"
-        android:icon="@drawable/icons8_filter"/> <!-- Replace with your icon -->
+        android:icon="@drawable/icons8_filter"
+        app:showAsAction="always"
+        app:iconTint="@color/primaryButton"/> <!-- ✅ Use primary button color -->
 </menu>

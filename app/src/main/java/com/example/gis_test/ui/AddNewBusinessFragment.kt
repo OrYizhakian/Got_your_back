@@ -194,31 +194,39 @@ class AddNewBusinessFragment : Fragment() {
     private suspend fun getCoordinatesFromAddress(address: String): Pair<Double, Double>? {
         return withContext(Dispatchers.IO) {
             try {
-                val apiKey = "YOUR_GOOGLE_MAPS_API_KEY"
+                val apiKey = "AIzaSyDGbTBBbd13wYsrpaRzYdHg8GUDgpJ4Inc"
                 val url = "https://maps.googleapis.com/maps/api/geocode/json?address=${address.replace(" ", "+")}&key=$apiKey"
+
                 val request = Request.Builder().url(url).build()
                 val response = client.newCall(request).execute()
 
-                response.body?.string()?.let { responseBody ->
-                    val jsonResponse = JSONObject(responseBody)
-                    val results = jsonResponse.getJSONArray("results")
+                val responseBody = response.body?.string()
+                Log.d("Geocoding", "API Response: $responseBody") // ✅ Log response for debugging
 
-                    if (results.length() > 0) {
+                responseBody?.let {
+                    val jsonResponse = JSONObject(it)
+                    val results = jsonResponse.optJSONArray("results")
+
+                    if (results != null && results.length() > 0) {
                         val location = results.getJSONObject(0)
                             .getJSONObject("geometry")
                             .getJSONObject("location")
 
                         val lat = location.getDouble("lat")
                         val lon = location.getDouble("lng")
+                        Log.d("Geocoding", "Coordinates: $lat, $lon") // ✅ Log retrieved coordinates
                         return@withContext Pair(lat, lon)
+                    } else {
+                        Log.e("Geocoding", "No results found for address: $address")
                     }
                 }
             } catch (e: Exception) {
-                Log.e("Geocoding", "Error: ${e.message}")
+                Log.e("Geocoding", "Google Geocoding error: ${e.message}")
             }
             return@withContext null
         }
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

@@ -10,8 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database(entities = [User::class, Business::class], version = 5, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun businessDao(): BusinessDao
-    abstract fun userDao(): UserDao
+
 
     companion object {
         @Volatile
