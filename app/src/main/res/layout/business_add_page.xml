@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
-                android:textColor="@color/labels"
+                android:textColor="@color/borderColor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/business_name"
@@ -64,13 +64,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
+
             <TextView
-                android:textColor="@color/labels"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="35dp"
                 android:text="@string/category"
-                android:textSize="18sp"
-                android:layout_marginTop="35dp" />
+                android:textColor="@color/borderColor"
+                android:textSize="18sp" />
             <Space
                 android:layout_width="130dp"
                 android:layout_height="wrap_content" />
@@ -89,7 +90,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
-                android:textColor="@color/labels"
+                android:textColor="@color/borderColor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/street"
@@ -127,7 +128,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
-                android:textColor="@color/labels"
+                android:textColor="@color/borderColor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/street_number"
@@ -163,7 +164,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <TextView
-                android:textColor="@color/labels"
+                android:textColor="@color/borderColor"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/opening_hours"
@@ -197,12 +198,12 @@
             android:orientation="horizontal">
 
             <TextView
-                android:textColor="@color/labels"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="35dp"
                 android:text="@string/closing_hours"
-                android:textSize="18sp"
-                android:layout_marginTop="35dp" />
+                android:textColor="@color/borderColor"
+                android:textSize="18sp" />
             <Space
                 android:layout_width="65dp"
                 android:layout_height="wrap_content"/>
@@ -223,7 +224,7 @@
         </LinearLayout>
         <!-- שדה תיאור העסק -->
         <TextView
-            android:textColor="@color/labels"
+            android:textColor="@color/borderColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/description"
