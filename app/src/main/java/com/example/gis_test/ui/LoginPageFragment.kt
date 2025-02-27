@@ -58,7 +58,7 @@ class LoginPageFragment : Fragment() {
 
                     Log.d("LoginFragment", "User logged in with ID: $firebaseUserId")
 
-                    // ✅ Navigate to MyBusinessesFragment and pass the user ID
+                    //    Navigate to MyBusinessesFragment and pass the user ID
                     val bundle = Bundle().apply {
                         putString("userId", firebaseUserId)
                     }

@@ -158,7 +158,7 @@ class AddNewBusinessFragment : Fragment() {
 
                 val businessRef = firestore.collection("businesses").document()
                 val businessMap = hashMapOf(
-                    "businessIdFirestore" to businessRef.id,  // ✅ Unique Firestore ID
+                    "businessIdFirestore" to businessRef.id,  //    Unique Firestore ID
                     "userId" to currentUser.uid,
                     "name" to businessName,
                     "category" to businessCategory,
@@ -167,7 +167,7 @@ class AddNewBusinessFragment : Fragment() {
                     "openingHours" to openingHours,
                     "closingHours" to closingHours,
                     "description" to businessDescription,
-                    "latitude" to latitude,  // ✅ Ensure location is stored
+                    "latitude" to latitude,  //    Ensure location is stored
                     "longitude" to longitude
                 )
 
@@ -201,7 +201,7 @@ class AddNewBusinessFragment : Fragment() {
                 val response = client.newCall(request).execute()
 
                 val responseBody = response.body?.string()
-                Log.d("Geocoding", "API Response: $responseBody") // ✅ Log response for debugging
+                Log.d("Geocoding", "API Response: $responseBody") //    Log response for debugging
 
                 responseBody?.let {
                     val jsonResponse = JSONObject(it)
@@ -214,7 +214,7 @@ class AddNewBusinessFragment : Fragment() {
 
                         val lat = location.getDouble("lat")
                         val lon = location.getDouble("lng")
-                        Log.d("Geocoding", "Coordinates: $lat, $lon") // ✅ Log retrieved coordinates
+                        Log.d("Geocoding", "Coordinates: $lat, $lon") //    Log retrieved coordinates
                         return@withContext Pair(lat, lon)
                     } else {
                         Log.e("Geocoding", "No results found for address: $address")

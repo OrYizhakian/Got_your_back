@@ -33,10 +33,10 @@ class BusinessUpdateFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        business = arguments?.getParcelable("business") // ✅ Retrieve business
+        business = arguments?.getParcelable("business") //    Retrieve business
 
         if (business != null) {
-            populateFields(business!!) // ✅ Fill fields with existing data
+            populateFields(business!!) //    Fill fields with existing data
         } else {
             Toast.makeText(requireContext(), "Error: Business not found.", Toast.LENGTH_SHORT).show()
             findNavController().popBackStack()
@@ -121,7 +121,7 @@ class BusinessUpdateFragment : Fragment() {
     private fun updateBusinessInFirestore() {
         val businessId = business?.businessIdFirestore
 
-        // ✅ Ensure businessIdFirestore is valid
+        //    Ensure businessIdFirestore is valid
         if (businessId.isNullOrEmpty()) {
             Toast.makeText(requireContext(), "Error: Business ID is missing.", Toast.LENGTH_SHORT).show()
             Log.e("BusinessUpdateFragment", "Error: businessIdFirestore is null or empty")
@@ -140,13 +140,13 @@ class BusinessUpdateFragment : Fragment() {
 
         val firestore = FirebaseFirestore.getInstance()
 
-        // ✅ Ensure the document reference is valid
+        //    Ensure the document reference is valid
         val businessRef = firestore.collection("businesses").document(businessId)
 
         businessRef.update(updatedBusiness as Map<String, Any>)
             .addOnSuccessListener {
                 Toast.makeText(requireContext(), "Business updated successfully!", Toast.LENGTH_SHORT).show()
-                findNavController().popBackStack() // ✅ Navigate back after success
+                findNavController().popBackStack() //    Navigate back after success
             }
             .addOnFailureListener { e ->
                 Toast.makeText(requireContext(), "Failed to update: ${e.message}", Toast.LENGTH_SHORT).show()

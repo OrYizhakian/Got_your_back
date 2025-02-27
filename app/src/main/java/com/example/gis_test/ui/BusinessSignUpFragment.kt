@@ -119,7 +119,7 @@
             var email: String? = null
             var password: String? = null
 
-            // ✅ Extract user details from arguments
+            //   Extract user details from arguments
             arguments?.let {
                 userName = it.getString("userName")
                 email = it.getString("userEmail")
@@ -132,18 +132,18 @@
                     val streetNumber = binding.streetnumberEdt.text.toString().trim()
                     val street = binding.streetNameEdt.text.toString().trim()
 
-                    // ✅ Ensure all fields are filled
+                    //   Ensure all fields are filled
                     if (businessName.isEmpty() || street.isEmpty() || streetNumber.isEmpty() ||
                         userName.isNullOrEmpty() || email.isNullOrEmpty() || password.isNullOrEmpty()) {
                         Toast.makeText(requireContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show()
                         return@launch
                     }
 
-                    // ✅ Disable button while registering
+                    //   Disable button while registering
                     binding.signupBtn.isEnabled = false
                     binding.signupBtn.text = "Registering..."
 
-                    // ✅ Check if the user already exists in Firestore
+                    //   Check if the user already exists in Firestore
                     val existingUser = firestore.collection("users")
                         .whereEqualTo("email", email)
                         .get().await()
@@ -151,7 +151,7 @@
                     val userId: String
 
                     if (existingUser.isEmpty) {
-                        // ✅ Register the user in Firebase Authentication
+                        //   Register the user in Firebase Authentication
                         val authResult = auth.createUserWithEmailAndPassword(email!!, password!!).await()
                         val firebaseUser = authResult.user
 
@@ -164,22 +164,22 @@
 
                         userId = firebaseUser.uid
 
-                        // ✅ Save new user in Firestore with userName
+                        //   Save new user in Firestore with userName
                         val userRef = firestore.collection("users").document(userId)
                         val userData = hashMapOf(
                             "userId" to userId,
-                            "userName" to userName, // ✅ Save user name
+                            "userName" to userName, //   Save user name
                             "email" to email,
                             "password" to password // ⚠️ Ideally, do NOT store passwords in plaintext
                         )
                         userRef.set(userData).await()
                         Log.d("BusinessSignUpFragment", "User registered: $userName ($email)")
                     } else {
-                        // ✅ Use existing user ID
+                        //   Use existing user ID
                         userId = existingUser.documents[0].id
                     }
 
-                    // ✅ Get business coordinates
+                    //   Get business coordinates
                     val address = "$streetNumber $street, Tel Aviv, Israel"
                     val coordinates = getCoordinatesFromAddress(address)
                     if (coordinates == null) {
@@ -190,24 +190,24 @@
                     }
                     val (latitude, longitude) = coordinates
 
-                    // ✅ Save business to Firestore
-                    // ✅ Save business to Firestore with all necessary fields
+                    //   Save business to Firestore
+                    //   Save business to Firestore with all necessary fields
                     val businessRef = firestore.collection("businesses").document()
                     val businessData = hashMapOf(
                         "businessIdFirestore" to businessRef.id,
                         "name" to businessName,
-                        "category" to categories[binding.categoryPicker.value], // ✅ Ensure category is stored
+                        "category" to categories[binding.categoryPicker.value], //   Ensure category is stored
                         "street" to street,
                         "streetNumber" to streetNumber,
                         "latitude" to latitude,
                         "longitude" to longitude,
-                        "openingHours" to "${hours[binding.openHourPicker.value]}:${minutes[binding.openMinutePicker.value]}", // ✅ Opening hours
-                        "closingHours" to "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}", // ✅ Closing hours
-                        "description" to binding.businessDescEdt.text.toString().trim(), // ✅ Business description
-                        "userId" to userId // ✅ Link business to user
+                        "openingHours" to "${hours[binding.openHourPicker.value]}:${minutes[binding.openMinutePicker.value]}", //   Opening hours
+                        "closingHours" to "${hours[binding.closeHourPicker.value]}:${minutes[binding.closeMinutePicker.value]}", //   Closing hours
+                        "description" to binding.businessDescEdt.text.toString().trim(), //   Business description
+                        "userId" to userId //   Link business to user
                     )
 
-    // ✅ Save business data to Firestore
+    //   Save business data to Firestore
                     businessRef.set(businessData).await()
 
 

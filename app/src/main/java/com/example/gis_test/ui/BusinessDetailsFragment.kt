@@ -18,7 +18,7 @@ class BusinessDetailsFragment : Fragment() {
     private var _binding: BusinessDetailsBinding? = null
     private val binding get() = _binding!!
     private lateinit var business: Business
-    private val firestore = FirebaseFirestore.getInstance() // ✅ Firestore instance for fetching updates
+    private val firestore = FirebaseFirestore.getInstance() //    Firestore instance for fetching updates
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -34,7 +34,7 @@ class BusinessDetailsFragment : Fragment() {
 
         if (business.businessIdFirestore.isNotEmpty()) {
             Log.d("BusinessDetailsFragment", "Firestore ID: ${business.businessIdFirestore}")
-            fetchUpdatedBusinessData(business.businessIdFirestore) // ✅ Fetch fresh data
+            fetchUpdatedBusinessData(business.businessIdFirestore) //    Fetch fresh data
         } else {
             Log.e("BusinessDetailsFragment", "Business data is missing!")
             Toast.makeText(requireContext(), "Error loading business details", Toast.LENGTH_SHORT).show()
@@ -60,7 +60,7 @@ class BusinessDetailsFragment : Fragment() {
                     )
 
                     Log.d("BusinessDetailsFragment", "Updated business data: $updatedBusiness")
-                    displayBusinessDetails(updatedBusiness) // ✅ Update UI with fresh data
+                    displayBusinessDetails(updatedBusiness) //    Update UI with fresh data
                 } else {
                     Log.e("BusinessDetailsFragment", "Document not found in Firestore")
                 }
@@ -79,15 +79,15 @@ class BusinessDetailsFragment : Fragment() {
             businessDescriptionText.text = business.description ?: "No description provided"
         }
 
-        // ✅ Enable edit button & set click listener
+        //    Enable edit button & set click listener
         binding.editButton.isEnabled = true
         binding.editButton.setOnClickListener {
             val bundle = Bundle().apply {
-                putParcelable("business", business) // ✅ Pass business object for editing
+                putParcelable("business", business) //    Pass business object for editing
             }
             Log.d("BusinessDetailsFragment", "Navigating to Edit Business: ${business.businessIdFirestore}")
 
-            // ✅ Ensure correct ID in nav_graph.xml
+            //    Ensure correct ID in nav_graph.xml
             findNavController().navigate(
                 R.id.action_businessDetailsFragment2_to_businessUpdateFragment, bundle
             )

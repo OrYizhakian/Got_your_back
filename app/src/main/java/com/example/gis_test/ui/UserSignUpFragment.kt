@@ -74,7 +74,7 @@ class UserSignUpFragment : Fragment() {
                     return@launch
                 }
 
-                // ✅ User does not exist → Proceed to Business Signup
+                //   User does not exist → Proceed to Business Signup
                 val userBundle = Bundle().apply {
                     putString("userName", userName)
                     putString("userEmail", userEmail)

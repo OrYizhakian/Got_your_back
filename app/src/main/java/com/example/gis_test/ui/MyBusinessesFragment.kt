@@ -38,7 +38,7 @@ class MyBusinessesFragment : Fragment() {
     ): View {
         _binding = MyBusinessScreenBinding.inflate(inflater, container, false)
 
-        // ✅ Setup RecyclerView & Buttons
+        //   Setup RecyclerView & Buttons
         setupRecyclerView()
         setupButtons()
 
@@ -55,7 +55,7 @@ class MyBusinessesFragment : Fragment() {
         if (firebaseUserId != null) {
             Log.d("MyBusinessesFragment", "Fetching businesses for user: $firebaseUserId")
 
-            // ✅ If the user is an admin, load all businesses
+            //   If the user is an admin, load all businesses
             if (email.endsWith("@admin.com")) {
                 loadBusinesses(adminMode = true)
             } else {
@@ -94,6 +94,71 @@ class MyBusinessesFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = this@MyBusinessesFragment.adapter
         }
+        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                val deletedBusiness = adapter.currentList[position]
+                val currentList = adapter.currentList.toMutableList()
+
+                //  Remove item from UI immediately
+                currentList.removeAt(position)
+                adapter.submitList(currentList.toList())
+
+                //  Show Snackbar
+                val snackbar = Snackbar.make(binding.root, "Business deleted", Snackbar.LENGTH_LONG)
+                snackbar.setAction("UNDO") {
+                    lifecycleScope.launch {
+                        try {
+                            //  Restore business in Firestore
+                            firestore.collection("businesses")
+                                .document(deletedBusiness.businessIdFirestore)
+                                .set(deletedBusiness)
+                                .await()
+
+                            //  Restore UI
+                            val updatedList = adapter.currentList.toMutableList()
+                            updatedList.add(position, deletedBusiness)
+                            withContext(Dispatchers.Main) {
+                                adapter.submitList(updatedList.toList())
+                            }
+                        } catch (e: Exception) {
+                            Log.e("MyBusinessesFragment", "Error restoring business", e)
+                            Toast.makeText(requireContext(), "Error restoring business", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                snackbar.show()
+
+                //  If UNDO is not clicked, delete after Snackbar disappears
+                snackbar.addCallback(object : Snackbar.Callback() {
+                    override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                        if (event != DISMISS_EVENT_ACTION) { //  Only delete if UNDO was NOT clicked
+                            lifecycleScope.launch {
+                                try {
+                                    firestore.collection("businesses")
+                                        .document(deletedBusiness.businessIdFirestore)
+                                        .delete()
+                                        .await()
+                                } catch (e: Exception) {
+                                    Log.e("MyBusinessesFragment", "Error deleting business", e)
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        })
+
+        itemTouchHelper.attachToRecyclerView(binding.businessRecyclerView)
+
     }
 
     private fun setupButtons() {
@@ -121,7 +186,7 @@ class MyBusinessesFragment : Fragment() {
                 val businesses = mutableListOf<Business>()
 
                 val query = if (adminMode) {
-                    // ✅ Admin: Fetch all businesses
+                    //  Admin: Fetch all businesses
                     firestore.collection("businesses")
                 } else {
                     // 👤 Regular User: Fetch only their businesses
@@ -153,7 +218,7 @@ class MyBusinessesFragment : Fragment() {
                     )
                 }
 
-                // ✅ Update UI
+                //   Update UI
                 withContext(Dispatchers.Main) {
                     if (businesses.isNotEmpty()) {
                         binding.businessListEmptyMessage.visibility = View.GONE

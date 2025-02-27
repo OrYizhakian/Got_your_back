@@ -64,10 +64,10 @@
                 childFragmentManager.findFragmentById(R.id.map_fragment) as? SupportMapFragment
             mapFragment?.getMapAsync(this)
 
-            // ✅ Find the burger button
+            //     Find the burger button
             val burgerButton: ImageButton = view.findViewById(R.id.burger_button)
 
-            // ✅ Show menu when clicked
+            //     Show menu when clicked
             burgerButton.setOnClickListener {
                 showMenu(it)
             }
@@ -78,7 +78,7 @@
 
         override fun onMapReady(map: GoogleMap) {
             googleMap = map
-            // ✅ Disable default Google businesses
+            //     Disable default Google businesses
             googleMap.setMapStyle(
                 MapStyleOptions.loadRawResourceStyle(requireContext(), R.raw.map_style)
             )
@@ -97,8 +97,8 @@
 
             googleMap.uiSettings.apply {
                 isZoomControlsEnabled = true
-                isCompassEnabled = true // ✅ Ensure compass is visible
-                isMapToolbarEnabled = false // ✅ Remove bottom navigation toolbar
+                isCompassEnabled = true //     Ensure compass is visible
+                isMapToolbarEnabled = false //     Remove bottom navigation toolbar
             }
             // **Focus on a specific business if provided**
             if (focusLatitude != null && focusLongitude != null) {
@@ -165,7 +165,7 @@
                                 .position(position)
                                 .title(name)
                                 .snippet("📍 $street $streetNumber\n🕒 $openingHours - $closingHours")
-                                .icon(getCategoryIcon(category,requireContext())) // ✅ Use category-specific icons
+                                .icon(getCategoryIcon(category,requireContext())) //     Use category-specific icons
                         )
 
                         // Attach the full Business object to the marker
@@ -327,7 +327,7 @@
                 .setTitle("Select Map Theme")
                 .setItems(themes) { _, which ->
                     val selectedTheme = themes[which]
-                    applyMapTheme(selectedTheme) // ✅ Apply selected theme
+                    applyMapTheme(selectedTheme) //     Apply selected theme
                 }
                 .show()
         }
@@ -340,11 +340,11 @@
             popupMenu.setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     R.id.menu_change_theme -> {
-                        showThemeSelectionDialog() // ✅ Open Theme Selection
+                        showThemeSelectionDialog() //     Open Theme Selection
                         true
                     }
                     R.id.menu_filter -> {
-                        showCategoryFilterDialog() // ✅ Open Filter Selection
+                        showCategoryFilterDialog() //     Open Filter Selection
                         true
                     }
                     else -> false
